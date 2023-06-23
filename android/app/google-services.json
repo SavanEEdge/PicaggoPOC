@@ -1,0 +1,87 @@
+{
+  "project_info": {
+    "project_number": "896982317636",
+    "firebase_url": "https://picaggo-235807.firebaseio.com",
+    "project_id": "picaggo-235807",
+    "storage_bucket": "picaggo-235807.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:896982317636:android:a35cff494075fa10",
+        "android_client_info": {
+          "package_name": "application.share.photo.picaggo"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "896982317636-5ul5sc8rvichrcjubdk96k9l8vpn7tln.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "application.share.photo.picaggo",
+            "certificate_hash": "8cce472fac7d635a9360bfc274f29de031fa8892"
+          }
+        },
+        {
+          "client_id": "896982317636-anim2splu1c3m5rr4o546e2qf4cme3h6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "application.share.photo.picaggo",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "896982317636-qluprkimnqokla4o84m8udf56qqp3pbf.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "application.share.photo.picaggo",
+            "certificate_hash": "3b382aec0debb3103d7ff52d208eaa7bbd82c929"
+          }
+        },
+        {
+          "client_id": "896982317636-raufrad92qtssirktaqr2k21r5tkohq6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "application.share.photo.picaggo",
+            "certificate_hash": "da83da7cdfe5f7367b6f2212a4cc417e77531fcc"
+          }
+        },
+        {
+          "client_id": "896982317636-vaebv6069oe25it441riucu5o7ri5ia5.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "application.share.photo.picaggo",
+            "certificate_hash": "1824e525bbba828c943344e4c16fb7be087fa4e6"
+          }
+        },
+        {
+          "client_id": "896982317636-48kai8erdjk2umhpsa657tak2nce55qn.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB_xTxqkTMwR7UC9RIKglHzUKcOhfrXWy8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "896982317636-48kai8erdjk2umhpsa657tak2nce55qn.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "896982317636-0288sfig7rmr0p7p4m668ri3lndknfpj.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "application.photo.share.picaggo"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
