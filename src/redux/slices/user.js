@@ -8,7 +8,7 @@ const initialState = {
     firebaseUser: null,
     user: null,
     verificationId: '',
-    resolver: () => { },
+    resolver: '',
 };
 
 const userSlice = createSlice({

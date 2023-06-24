@@ -6,7 +6,7 @@ import { useLoader } from '../hooks/useLoader';
 import { useUser } from '../hooks/useUser';
 
 function OTP({ route }) {
-    const { user } = useUser();
+    const { user, updateInfo } = useUser();
     const { showLoader, hideLoader } = useLoader();
     const [otp, setotp] = useState('');
     const { verificationId, resolver } = user;
@@ -19,8 +19,11 @@ function OTP({ route }) {
 
         resolver.resolveSignIn(multiFactorAssertion).then(userCredential => {
             // additionally onAuthStateChanged will be triggered as well
+            updateInfo({
+                resolver: '',
+            })
             hideLoader();
-            console.log("userCredential", userCredential)
+            // console.log("userCredential", userCredential)
         }).catch(err => {
             hideLoader();
             console.log("Errr", err)

@@ -53,7 +53,7 @@ function Login({ navigation }) {
                             hideLoader();
                             updateInfo({
                                 verificationId,
-                                resolver
+                                resolver,
                             })
                             navigation.replace("OTP")
                         })

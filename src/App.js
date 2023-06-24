@@ -4,7 +4,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Login } from './screens/login';
 import { OTP } from './screens/otp';
-import { Event } from './screens/event';
+import { Home } from './screens/home';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { Provider } from 'react-redux';
 import { store } from './redux/store';
@@ -13,6 +13,7 @@ import { Loader } from './components/loader';
 import auth from '@react-native-firebase/auth';
 import { useLoader } from './hooks/useLoader';
 import { useAWS } from './hooks/useAWS';
+import { Event } from './screens/event';
 
 
 GoogleSignin.configure({
@@ -35,7 +36,7 @@ function NavigationStack() {
                     console.log("Token", latestToken)
                     updateInfo({
                         firebaseAuthToken: latestToken,
-                        firebaseUser: user,
+                        firebaseUser: JSON.stringify(user),
                     });
                 })
                 .catch(err => {
@@ -59,7 +60,7 @@ function NavigationStack() {
 
     useEffect(() => {
         if (user?.user?.user_id !== '') {
-            console.log("user?.user?.user_id", user?.user?.user_id, user?.user?.user_id !== '')
+            // console.log("user?.user?.user_id", user?.user?.user_id, user?.user?.user_id !== '')
             fetchS3Details();
         }
     }, [user.user]);
@@ -71,7 +72,7 @@ function NavigationStack() {
 
         xhr.addEventListener("readystatechange", function () {
             showLoader("Server login...");
-            console.log("readyState", this.readyState);
+            // console.log("readyState", this.readyState);
             if (this.readyState === 4) {
                 if (this.status === 200) {
                     const res = JSON.parse(this.response);
@@ -108,9 +109,9 @@ function NavigationStack() {
             }
         });
 
-        console.log("========================================================")
-        console.log("data", data)
-        console.log("========================================================")
+        // console.log("========================================================")
+        // console.log("data", data)
+        // console.log("========================================================")
         xhr.open("POST", "https://u6mj6kk2h1.execute-api.us-west-1.amazonaws.com/findRegion");
         xhr.setRequestHeader("Authorization", user.firebaseAuthToken?.trim());
         xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
@@ -130,7 +131,10 @@ function NavigationStack() {
                     <Screen name='OTP' component={OTP} options={{ headerShown: false }} />
                 </>
                 :
-                <Screen name='Event' component={Event} options={{ headerShown: false }} />
+                <>
+                    <Screen name='home' component={Home} options={{ headerShown: false }} />
+                    <Screen name='event' component={Event} options={{ headerShown: false }} />
+                </>
             }
         </Navigator>
     );
