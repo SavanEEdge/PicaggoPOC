@@ -6,12 +6,10 @@ import { useLoader } from '../hooks/useLoader';
 import { useUser } from '../hooks/useUser';
 
 function OTP({ route }) {
-    const {updateInfo} = useUser();
+    const { user } = useUser();
     const { showLoader, hideLoader } = useLoader();
     const [otp, setotp] = useState('');
-    const { verificationId, resolver } = route.params;
-
-    
+    const { verificationId, resolver } = user;
 
     async function verifyOTP() {
         showLoader('Verifying OTP...')

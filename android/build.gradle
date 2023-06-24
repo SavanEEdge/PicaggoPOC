@@ -11,7 +11,7 @@ buildscript {
         ndkVersion = "23.1.7779620"
 
         // Keystore Path
-        var = 'D:/EmpiricalEdgeInc/Documents/PIcaggo/PICAGGO_KEY'
+        var = 'D:/OfficeWork/React-Native/PicaggoPOC/android/app/PICAGGO_KEY'
     }
     repositories {
         google()

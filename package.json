@@ -17,6 +17,8 @@
     "@react-navigation/native-stack": "^6.9.12",
     "@reduxjs/toolkit": "^1.9.5",
     "apisauce": "^3.0.1",
+    "crc-32": "^1.2.2",
+    "crypto-js": "^4.1.1",
     "react": "18.2.0",
     "react-native": "0.71.10",
     "react-native-otp-textinput": "^1.0.1",

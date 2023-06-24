@@ -51,7 +51,11 @@ function Login({ navigation }) {
                         .verifyPhoneNumberWithMultiFactorInfo(hint, sessionId)
                         .then(verificationId => {
                             hideLoader();
-                            navigation.replace("OTP", { resolver, verificationId })
+                            updateInfo({
+                                verificationId,
+                                resolver
+                            })
+                            navigation.replace("OTP")
                         })
                         .catch(err => {
                             hideLoader();

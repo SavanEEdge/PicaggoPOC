@@ -1,5 +1,7 @@
-import { useMemo, useEffect } from 'react';
+import { useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import auth from '@react-native-firebase/auth';
 import { logout, updateInformation } from '../redux/slices/user';
 
 export function useUser() {
@@ -10,7 +12,13 @@ export function useUser() {
         dispatch(updateInformation(obj));
     }
 
-    function userLogout() {
+    async function userLogout() {
+        const isSignedIn = await GoogleSignin.isSignedIn();
+        if (isSignedIn) {
+            await GoogleSignin.revokeAccess();
+            await GoogleSignin.signOut();
+            auth().signOut();
+        }
         dispatch(logout());
     }
 

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { ActivityIndicator } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Login } from './screens/login';
@@ -9,8 +10,8 @@ import { Provider } from 'react-redux';
 import { store } from './redux/store';
 import { useUser } from './hooks/useUser';
 import { Loader } from './components/loader';
-import { Splash } from './screens/splash';
 import auth from '@react-native-firebase/auth';
+import { useLoader } from './hooks/useLoader';
 
 
 GoogleSignin.configure({
@@ -20,32 +21,81 @@ GoogleSignin.configure({
 
 const { Navigator, Screen } = createNativeStackNavigator();
 function NavigationStack() {
-    const { user, updateInfo } = useUser();
+    const [initializing, setInitializing] = useState(true);
+    const { user, updateInfo, userLogout } = useUser();
+    const { showLoader, hideLoader } = useLoader();
+
+    // Check Firebase auth state
+    function authStateChanged(user) {
+        if (user) {
+            user.getIdToken(false)
+                .then(latestToken => {
+                    updateInfo({
+                        firebaseAuthToken: latestToken,
+                        firebaseUser: user,
+                    });
+                })
+                .catch(err => {
+                    console.log("Firebase Token Error: ", err);
+                });
+        } else {
+            userLogout();
+            setInitializing(false);
+        }
+    };
 
     useEffect(() => {
-        return auth().onAuthStateChanged(user => {
-            if (user) {
-                user.getIdToken(false)
-                    .then(latestToken => {
+        return auth().onAuthStateChanged(authStateChanged);
+    }, []);
+
+    useEffect(() => {
+        login();
+    }, [user.firebaseAuthToken]);
+
+    function login() {
+        if (user.firebaseAuthToken !== '') {
+            const data = "version=1.0&device_name=Vivo%20v15&device=android";
+            const xhr = new XMLHttpRequest();
+            xhr.withCredentials = true;
+            
+            xhr.addEventListener("readystatechange", function () {
+                showLoader("Server login...");
+                console.log("readyState", this.readyState);
+                if (this.readyState === 4) {
+                    if (this.status === 200) {
+                        const res = JSON.parse(this.response);
                         updateInfo({
-                            firebaseAuthToken: latestToken,
-                            firebaseUser: user,
+                            isLoggedIn: true,
+                            user: res,
                         });
-                    })
-                    .catch(err => {
-                        console.log("Firebase Token Error: ", err)
-                    });
-            }
-        })
-    }, [])
+                        setInitializing(false);
+                        hideLoader();
+                    } else {
+                        console.error("API Error:- ", this.responseText);
+                        setInitializing(false);
+                        hideLoader();
+                        userLogout();
+                    }
+                }
+            });
+            xhr.open("POST", "https://vq8w0bp7ee.execute-api.us-west-1.amazonaws.com/sign-in");
+            xhr.setRequestHeader("Authorization", user.firebaseAuthToken?.trim());
+            xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+            xhr.send(data);
+        }
+    }
+
+
+    if (initializing) {
+        return <ActivityIndicator />;
+    }
 
     return (
         <Navigator>
             {!user.isLoggedIn ?
                 <>
-                    <Screen name='Splash' component={Splash} options={{ headerShown: false }} />
                     <Screen name='Login' component={Login} options={{ headerShown: false }} />
-                    <Screen name='OTP' component={OTP} options={{ headerShown: false }} initialParams={{ resolveSignIn: () => console.log("Moc Function"), verificationId: 'Fake' }} />
+                    <Screen name='OTP' component={OTP} options={{ headerShown: false }} />
                 </>
                 :
                 <Screen name='Event' component={Event} options={{ headerShown: false }} />
