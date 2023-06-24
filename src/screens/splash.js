@@ -3,7 +3,7 @@ import { ActivityIndicator, View, StyleSheet } from 'react-native';
 import { useUser } from '../hooks/useUser';
 
 export function Splash({ navigation }) {
-    const { user, updateInfo } = useUser();
+    const { user } = useUser();
 
     useEffect(() => {
         if (user.firebaseAuthToken === '') {

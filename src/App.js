@@ -12,6 +12,7 @@ import { useUser } from './hooks/useUser';
 import { Loader } from './components/loader';
 import auth from '@react-native-firebase/auth';
 import { useLoader } from './hooks/useLoader';
+import { useAWS } from './hooks/useAWS';
 
 
 GoogleSignin.configure({
@@ -24,12 +25,14 @@ function NavigationStack() {
     const [initializing, setInitializing] = useState(true);
     const { user, updateInfo, userLogout } = useUser();
     const { showLoader, hideLoader } = useLoader();
+    const { addS3Details } = useAWS();
 
     // Check Firebase auth state
     function authStateChanged(user) {
         if (user) {
-            user.getIdToken(false)
+            user.getIdToken(true)
                 .then(latestToken => {
+                    console.log("Token", latestToken)
                     updateInfo({
                         firebaseAuthToken: latestToken,
                         firebaseUser: user,
@@ -49,41 +52,70 @@ function NavigationStack() {
     }, []);
 
     useEffect(() => {
-        login();
+        if (user.firebaseAuthToken !== '') {
+            login();
+        }
     }, [user.firebaseAuthToken]);
 
-    function login() {
-        if (user.firebaseAuthToken !== '') {
-            const data = "version=1.0&device_name=Vivo%20v15&device=android";
-            const xhr = new XMLHttpRequest();
-            xhr.withCredentials = true;
-            
-            xhr.addEventListener("readystatechange", function () {
-                showLoader("Server login...");
-                console.log("readyState", this.readyState);
-                if (this.readyState === 4) {
-                    if (this.status === 200) {
-                        const res = JSON.parse(this.response);
-                        updateInfo({
-                            isLoggedIn: true,
-                            user: res,
-                        });
-                        setInitializing(false);
-                        hideLoader();
-                    } else {
-                        console.error("API Error:- ", this.responseText);
-                        setInitializing(false);
-                        hideLoader();
-                        userLogout();
-                    }
-                }
-            });
-            xhr.open("POST", "https://vq8w0bp7ee.execute-api.us-west-1.amazonaws.com/sign-in");
-            xhr.setRequestHeader("Authorization", user.firebaseAuthToken?.trim());
-            xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-            xhr.send(data);
+    useEffect(() => {
+        if (user?.user?.user_id !== '') {
+            console.log("user?.user?.user_id", user?.user?.user_id, user?.user?.user_id !== '')
+            fetchS3Details();
         }
+    }, [user.user]);
+
+    function login() {
+        const data = "version=1.0&device_name=Vivo%20v15&device=android";
+        const xhr = new XMLHttpRequest();
+        xhr.withCredentials = true;
+
+        xhr.addEventListener("readystatechange", function () {
+            showLoader("Server login...");
+            console.log("readyState", this.readyState);
+            if (this.readyState === 4) {
+                if (this.status === 200) {
+                    const res = JSON.parse(this.response);
+                    updateInfo({
+                        isLoggedIn: true,
+                        user: res,
+                    });
+                    setInitializing(false);
+                    hideLoader();
+                } else {
+                    console.error("API Error:- ", this.responseText);
+                    setInitializing(false);
+                    hideLoader();
+                    userLogout();
+                }
+            }
+        });
+        xhr.open("POST", "https://vq8w0bp7ee.execute-api.us-west-1.amazonaws.com/sign-in");
+        xhr.setRequestHeader("Authorization", user.firebaseAuthToken?.trim());
+        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+        xhr.send(data);
     }
+
+    function fetchS3Details() {
+        const data = `user_id=${user?.user?.user_id}&region=india`;
+        const xhr = new XMLHttpRequest();
+        xhr.withCredentials = true;
+
+        xhr.addEventListener("readystatechange", function () {
+            if (this.readyState === 4) {
+                if (this.status === 200) {
+                    addS3Details(JSON.parse(this.response));
+                }
+            }
+        });
+
+        console.log("========================================================")
+        console.log("data", data)
+        console.log("========================================================")
+        xhr.open("POST", "https://u6mj6kk2h1.execute-api.us-west-1.amazonaws.com/findRegion");
+        xhr.setRequestHeader("Authorization", user.firebaseAuthToken?.trim());
+        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+        xhr.send(data);
+    };
 
 
     if (initializing) {
