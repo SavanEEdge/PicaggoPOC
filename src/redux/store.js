@@ -1,4 +1,4 @@
-import { configureStore } from '@reduxjs/toolkit';
+import { configureStore, getDefaultMiddleware } from '@reduxjs/toolkit';
 import user from './slices/user';
 import loader from './slices/loader';
 import event from './slices/event';
@@ -12,5 +12,8 @@ export const store = configureStore({
         event,
         aws,
         media
-    }
+    },
+    middleware: (getDefaultMiddleware) => getDefaultMiddleware({
+        serializableCheck: false
+    })
 })

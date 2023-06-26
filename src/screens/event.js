@@ -3,14 +3,30 @@ import { Image, ScrollView, StyleSheet, Text, View } from "react-native"
 import { useEvent } from "../hooks/useEvent";
 import { getCameraAssets, requestPermission } from "../utils/helper";
 import { useMedia } from '../hooks/useMedia';
-
+import { eventEmitter } from '../event';
+import { useInactiveBackgroundState } from '../hooks/useInactiveBackgroundState';
+import { useDispatch } from 'react-redux';
+import { loadMediaFromDataBase } from '../redux/slices/media';
 
 function Event() {
     const { event } = useEvent();
     const { media, addAssets } = useMedia();
+    const dispatch = useDispatch();
+
+    useInactiveBackgroundState(init);
 
     useEffect(() => {
-        init();
+        dispatch(loadMediaFromDataBase(init));
+    }, []);
+
+    useEffect(() => {
+        eventEmitter.addListener('media', (data) => {
+            console.log("New data comming...", data);
+        });
+
+        return () => {
+            eventEmitter.removeListener('media');
+        }
     }, []);
 
     async function init() {
@@ -23,6 +39,8 @@ function Event() {
             }
         }
     }
+
+
     return (
         <View style={styles.container}>
             {event?.event_id && <Text style={styles.text}>Event Id: {event?.event_id}</Text>}
