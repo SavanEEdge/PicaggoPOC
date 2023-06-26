@@ -118,6 +118,9 @@ function NavigationStack() {
         xhr.send(data);
     };
 
+    if (__DEV__) {
+        import('./utils/ReactotronConfig').then(() => console.log('Reactotron Configured'))
+    }
 
     if (initializing) {
         return <ActivityIndicator />;

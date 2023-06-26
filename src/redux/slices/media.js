@@ -1,7 +1,8 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-import { mergedArr } from '../../utils/helper';
+import { compressImageFile, convertUnixTimeSteamp, encodedData, generateFileName, getFileName, getMD5, mergedArr } from '../../utils/helper';
 import { eventEmitter } from '../../event';
 import { DBInstance } from '../../service/realm';
+import reactotron from 'reactotron-react-native';
 
 const initialState = {
     assets: []
@@ -43,36 +44,53 @@ export const insertMedia = createAsyncThunk('media/insertMedia', (param = [], th
     }
 });
 
-// export const insertMedia = (media) => (dispatch) => {
-//     console.log("media", media)
-//     // console.log("dispatch", dispatch);
+export const loadMediaFromDataBase = createAsyncThunk('media/loadMedia', (callback, thunk) => {
 
-//     // const data = mergedArr(oldArray, media);
-//     // const dbMedia = DBInstance.objects('media');
-//     // const dbMediaPath = dbMedia.map(m => m.fileUri);
-//     // const filteredData = data.filter(i => !dbMediaPath.includes())
+    const user = thunk.getState().user;
+    const event = thunk.getState().event;
+    const aws = thunk.getState().aws;
 
-//     // const reminingUploadData = data.filter(media => !media.isUploaded);
-//     // eventEmitter.emit('media', reminingUploadData)
-
-
-//     // data.forEach(file => {
-//     //     DBInstance.write(() => {
-//     //         const newObject = {
-//     //             id: `${file.timeStamp}`,
-//     //             ...file
-//     //         };
-
-//     //         DBInstance.create('media', newObject);
-//     //     })
-//     // })
-
-
-//     // dispatch(addMediaDetails(data));
-// }
-
-export const loadMediaFromDataBase = (callback) => dispatch => {
+    console.log("awsdetails ", aws);
     const dbMedia = DBInstance.objects('media');
-    dispatch(addMediaDetails(dbMedia));
+    dbMedia.forEach(media => {
+
+        if (media.isImage) {
+            compressImageFile(media.uri, async (file, deleteFunction) => {
+                const request_payload = {
+                    md5: getMD5(file.fileName),
+                    file_name: generateFileName(file.fileName, user.user.user_id, file.creationTime),
+                    name: file.fileName,
+                    event_id: event.event_id,
+                    user_id: user.user.user_id,
+                    mime_type: file.type,
+                    path: file.path,
+                    auto_collected: true,
+                    file_date: `${convertUnixTimeSteamp(file.creationTime)}`,
+                    bucket: aws.bucket,
+                    image: file.base64,
+                }
+
+                reactotron.log("request_payload", request_payload)
+                const final_request = encodedData(request_payload);
+                console.log("--------------------------------------------------------------")
+                console.log("final_request", final_request)
+                const xhr = new XMLHttpRequest();
+                xhr.withCredentials = true;
+
+                xhr.addEventListener("readystatechange", function () {
+                    if (this.readyState === 4) {
+                        console.log(this.responseText);
+                    }
+                });
+
+                xhr.open("POST", "https://sdrobz9xp1.execute-api.us-west-1.amazonaws.com/add_live_media_data");
+                xhr.setRequestHeader("Authorization", user.firebaseAuthToken?.trim());
+                xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+                xhr.send(final_request);
+                await deleteFunction();
+            });
+        }
+    });
+    thunk.dispatch(addMediaDetails(dbMedia));
     callback?.();
-}
+});

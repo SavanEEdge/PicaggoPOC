@@ -3,8 +3,15 @@ import moment from 'moment';
 import { PermissionsAndroid, Platform, ToastAndroid } from 'react-native';
 import RNFS from 'react-native-fs';
 import RNFetchBlob from 'rn-fetch-blob';
+import md5 from 'md5';
+
+import { Image } from 'react-native-compressor';
 
 export function generateFileName(name, user_id, date) {
+    if (!name) return '';
+    if (!user_id) return '';
+    if (!date) return '';
+
     return getHash(user_id + date + name) + "-" + getHash(user_id + date) + "-" + getHash(name + date) + "." + getFileExtension(name);
 }
 export function getHash(message) {
@@ -12,6 +19,15 @@ export function getHash(message) {
     const crc = CRC32.str(message);
     const formattedCRC = ("00000000" + crc.toString(16)).substr(-8).toUpperCase();
     return formattedCRC;
+}
+
+export function getMD5(string) {
+    try {
+        return md5(string);
+    } catch (error) {
+        // Handle any errors
+        console.error(error);
+    }
 }
 
 function getFileExtension(filename) {
@@ -123,3 +139,73 @@ export function getCameraAssets(filterFunction) {
         }
     })
 }
+
+export async function deleteFile(filePath) {
+    try {
+        await RNFS.unlink(filePath);
+        console.log('File deleted successfully.');
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+export function getFileName(filePath = '') {
+    if (!filePath || filePath === '') {
+        return '';
+    }
+
+    return filePath.split('/').pop();
+}
+
+export async function getFileDetails(filePath) {
+    try {
+        const statResult = await RNFS.stat(filePath);
+        const base64 = await RNFS.readFile(filePath, 'base64');
+
+        // Extract the file details
+        const { size, ctime, mtime } = statResult;  // need to check on ios
+
+        // Convert the size to a human-readable format
+        const fileSizeInBytes = size;
+        const fileSizeInKB = fileSizeInBytes / 1024;
+        const fileSizeInMB = fileSizeInKB / 1024;
+
+        return {
+            path: filePath,
+            base64: `data:image/jpeg;base64,${base64}`,
+            type: 'image/jpeg',
+            size: fileSizeInBytes,
+            sizeInKB: fileSizeInKB,
+            sizeInMB: fileSizeInMB,
+            creationTime: ctime,
+            modificationTime: mtime,
+        };
+    } catch (error) {
+        console.error(error);
+        return null;
+    }
+}
+
+
+export async function compressImageFile(filePath, uploadCallback) {
+    try {
+        const compressedFilePath = await Image.compress(filePath, { compressionMethod: 'auto' });
+        // Handle the compressed file
+        const fileName = getFileName(compressedFilePath);
+        const cacheDirectoryPath = RNFS.CachesDirectoryPath;
+        const filePathForCompressedFile = `${cacheDirectoryPath}/${fileName}`;
+        const compressedFileDetails = await getFileDetails(filePathForCompressedFile);
+        const fileDetails = { ...compressedFileDetails, fileName: getFileName(filePath) };
+
+        if (fileDetails.sizeInKB <= 500) {
+            uploadCallback?.(fileDetails, async () => {
+                await deleteFile(filePathForCompressedFile);
+            });
+        } else {
+            await deleteFile(filePathForCompressedFile);
+        }
+    } catch (error) {
+        // Handle the error
+        console.error(error);
+    }
+};
