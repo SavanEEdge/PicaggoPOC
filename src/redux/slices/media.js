@@ -69,24 +69,38 @@ export const loadMediaFromDataBase = createAsyncThunk('media/loadMedia', (callba
                     bucket: aws.bucket,
                     image: file.base64,
                 }
+                try {
 
-                reactotron.log("request_payload", request_payload)
-                const final_request = encodedData(request_payload);
-                console.log("--------------------------------------------------------------")
-                console.log("final_request", final_request)
-                const xhr = new XMLHttpRequest();
-                xhr.withCredentials = true;
+                    const rawRes = await fetch("https://sdrobz9xp1.execute-api.us-west-1.amazonaws.com/add_live_media_data", {
+                        method: 'POST',
+                        body: request_payload,
+                        headers: {
+                            Authorization: user.firebaseAuthToken?.trim(),
+                        }
+                    })
+                    const res = await rawRes.json();
+                    console.log("Response: ", res);
+                } catch (e) {
+                    console.log("Media Upload Error: ", e);
+                }
 
-                xhr.addEventListener("readystatechange", function () {
-                    if (this.readyState === 4) {
-                        console.log(this.responseText);
-                    }
-                });
+                // reactotron.log("request_payload", request_payload)
+                // const final_request = encodedData(request_payload);
+                // console.log("--------------------------------------------------------------")
+                // console.log("final_request", final_request)
+                // const xhr = new XMLHttpRequest();
+                // xhr.withCredentials = true;
 
-                xhr.open("POST", "https://sdrobz9xp1.execute-api.us-west-1.amazonaws.com/add_live_media_data");
-                xhr.setRequestHeader("Authorization", user.firebaseAuthToken?.trim());
-                xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-                xhr.send(final_request);
+                // xhr.addEventListener("readystatechange", function () {
+                //     if (this.readyState === 4) {
+                //         console.log(this.responseText);
+                //     }
+                // });
+
+                // xhr.open("POST", "https://sdrobz9xp1.execute-api.us-west-1.amazonaws.com/add_live_media_data");
+                // xhr.setRequestHeader("Authorization", user.firebaseAuthToken?.trim());
+                // xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+                // xhr.send(final_request);
                 await deleteFunction();
             });
         }

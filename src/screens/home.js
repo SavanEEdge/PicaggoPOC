@@ -2,17 +2,20 @@ import React, { useEffect, useState } from 'react';
 import { Text, View, Button, StyleSheet, ActivityIndicator } from 'react-native';
 import auth from '@react-native-firebase/auth';
 import { useUser } from '../hooks/useUser';
-import { encodedData, getHash, getUnixTimeSteamp } from '../utils/helper';
+import { encodedData, generateFileName, getHash, getMD5, getUnixTimeSteamp } from '../utils/helper';
 import { useLoader } from '../hooks/useLoader';
 import { useEvent } from '../hooks/useEvent';
 import { StorageService } from '../service/storage_service';
-import reactotron from 'reactotron-react-native';
 
 function Home({ navigation }) {
 
     const { user, userLogout } = useUser();
     const { addEvent } = useEvent();
     const { showLoader, hideLoader } = useLoader();
+
+    useEffect(() => {
+        getMD5('20230627_184850.jpg');
+    }, [])
 
     async function onLogout() {
         await auth().signOut();

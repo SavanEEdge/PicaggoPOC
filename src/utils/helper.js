@@ -1,9 +1,10 @@
-import CRC32 from 'crc-32';
+import crc from 'crc';
 import moment from 'moment';
 import { PermissionsAndroid, Platform, ToastAndroid } from 'react-native';
 import RNFS from 'react-native-fs';
 import RNFetchBlob from 'rn-fetch-blob';
 import md5 from 'md5';
+import Crypto from 'react-native-quick-crypto'
 
 import { Image } from 'react-native-compressor';
 
@@ -14,21 +15,54 @@ export function generateFileName(name, user_id, date) {
 
     return getHash(user_id + date + name) + "-" + getHash(user_id + date) + "-" + getHash(name + date) + "." + getFileExtension(name);
 }
-export function getHash(message) {
-    // return CRC32.str(message);
-    const crc = CRC32.str(message);
-    const formattedCRC = ("00000000" + crc.toString(16)).substr(-8).toUpperCase();
-    return formattedCRC;
+
+function getHash(message) {
+    const byteArray = new TextEncoder().encode(message);
+    return crc.crc32(byteArray).toString(16)?.toUpperCase();
 }
 
-export function getMD5(string) {
+export async function getMD5(string) {
     try {
-        return md5(string);
+        const hash = await calculateMD5(string);
+        console.log("hash", hash);
+        return hash;
     } catch (error) {
         // Handle any errors
-        console.error(error);
+        console.error("Generating file error: ", error);
     }
 }
+
+async function calculateMD5(filename) {
+    const isPermission = await requestPermission();
+    if (isPermission) {
+        const path = `${RNFS.ExternalStorageDirectoryPath}/dcim/camera/${filename}`;
+        const stat = await RNFetchBlob.fs.hash(path, "md5");
+
+        console.log("Full path", stat);
+        // const absoultePath = RNFS.
+        // const hash = await RNFS.hash(path, "md5");
+        // console.log("inside hash", hash);
+        return '';
+        // const hash = Crypto.createHash('md5');
+
+        // return new Promise((resolve, reject) => {
+        //     fileStream.on('data', (chunk) => {
+        //         hash.update(chunk);
+        //     });
+
+        //     fileStream.on('end', () => {
+        //         const md5Hash = hash.digest('hex');
+        //         console.log("inside hash", hash);
+        //         resolve(md5Hash);
+        //     });
+
+        //     fileStream.on('error', (error) => {
+        //         reject(error);
+        //     });
+        // });
+    }
+    return '';
+};
 
 function getFileExtension(filename) {
     return filename.split('.').pop();
