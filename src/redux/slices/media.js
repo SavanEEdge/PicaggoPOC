@@ -4,6 +4,8 @@ import { eventEmitter } from '../../event';
 import { DBInstance } from '../../service/realm';
 import reactotron from 'reactotron-react-native';
 import api from '../../api';
+import { getAWSClient } from '../../service/aws';
+import { StorageService } from '../../service/storage_service';
 
 const initialState = {
     assets: []
@@ -52,43 +54,70 @@ export const loadMediaFromDataBase = createAsyncThunk('media/loadMedia', (callba
     const aws = thunk.getState().aws;
 
     console.log("awsdetails ", aws);
+    const client = getAWSClient();
+
+
     const dbMedia = DBInstance.objects('media');
     dbMedia.forEach(media => {
-
+        const key = `events/${event.event_id}/originals/${media?.fileName}`;
+        console.log("key", key);
+        // checkFileExists(key, client);
         if (media.isImage) {
-            compressImageFile(media.uri, async (file, deleteFunction) => {
-                const headers = {
-                    "Authorization": user.firebaseAuthToken?.trim()
-                }
-                const requestBody = {
-                    md5: getMD5(file.fileName),
-                    file_name: generateFileName(file.fileName, user.user.user_id, file.creationTime),
-                    name: file.fileName,
-                    event_id: event.event_id,
-                    user_id: user.user.user_id,
-                    mime_type: file.type,
-                    path: file.path,
-                    auto_collected: true,
-                    file_date: `${convertUnixTimeSteamp(file.creationTime)}`,
-                    bucket: aws.bucket,
-                    image: file.base64,
-                };
-                // console.log("requestBody", requestBody);
-                reactotron.log("requestBody", requestBody)
+            // compressImageFile(media.uri, async (file, deleteFunction) => {
+            //     const headers = {
+            //         "Authorization": user.firebaseAuthToken?.trim()
+            //     }
+            //     const requestBody = {
+            //         md5: getMD5(file.fileName),
+            //         file_name: generateFileName(file.fileName, user.user.user_id, file.creationTime),
+            //         name: file.fileName,
+            //         event_id: event.event_id,
+            //         user_id: user.user.user_id,
+            //         mime_type: file.type,
+            //         path: file.path,
+            //         auto_collected: true,
+            //         file_date: `${convertUnixTimeSteamp(file.creationTime)}`,
+            //         bucket: aws.bucket,
+            //         image: file.base64,
+            //     };
+            //     // console.log("requestBody", requestBody);
+            //     reactotron.log("requestBody", requestBody)
 
-                try {
-                    const response = await api.post("https://sdrobz9xp1.execute-api.us-west-1.amazonaws.com/add_live_media_data", requestBody, headers);
-                    if (response.status) {
-                        const data = parseJson(response.data);
-                        console.log("Media response", JSON.stringify(data, null, 2));
-                    }
-                } catch (e) {
-                    console.log("Media Upload error: ", e);
-                }
-                await deleteFunction();
-            });
+            //     try {
+            //         const response = await api.post("https://sdrobz9xp1.execute-api.us-west-1.amazonaws.com/add_live_media_data", requestBody, headers);
+            //         if (response.status) {
+            //             const data = parseJson(response.data);
+            //             console.log("Media response", JSON.stringify(data, null, 2));
+            //         }
+            //     } catch (e) {
+            //         console.log("Media Upload error: ", e);
+            //     }
+            //     await deleteFunction();
+            // });
         }
     });
     thunk.dispatch(addMediaDetails(dbMedia));
     callback?.();
 });
+
+const checkFileExists = async (key, client) => {
+    const awsDetails = StorageService.getValue("aws");
+    const params = {
+        Bucket: awsDetails?.bucket,
+        Key: key,
+    };
+
+    try {
+        const res = await client?.headObject(params).promise();
+        console.log('File exists', res);
+        return true;
+    } catch (error) {
+        if (error.code === 'NotFound') {
+            console.log('File does not exist');
+            return false;
+        } else {
+            console.error('Error checking file existence:', error);
+            throw error;
+        }
+    }
+};

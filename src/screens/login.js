@@ -21,7 +21,7 @@ function Login({ navigation }) {
                 googleToken: idToken,
                 googleUser,
             })
-            console.log("idToken", idToken)
+            // console.log("idToken", idToken)
 
             // Create a Google credential with the token
             const googleCredential = auth.GoogleAuthProvider.credential(idToken);

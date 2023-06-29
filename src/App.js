@@ -1,3 +1,5 @@
+import 'react-native-get-random-values';
+import 'react-native-url-polyfill/auto';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
@@ -16,6 +18,7 @@ import { useAWS } from './hooks/useAWS';
 import { Event } from './screens/event';
 import api from './api';
 import { parseJson } from './utils/helper';
+import { StorageService } from './service/storage_service';
 
 
 GoogleSignin.configure({
@@ -35,7 +38,7 @@ function NavigationStack() {
         if (user) {
             user.getIdToken(true)
                 .then(latestToken => {
-                    console.log("Token", latestToken)
+                    // console.log("Token", latestToken)
                     updateInfo({
                         firebaseAuthToken: latestToken,
                         firebaseUser: JSON.stringify(user),
@@ -110,6 +113,7 @@ function NavigationStack() {
             const response = await api.post("https://u6mj6kk2h1.execute-api.us-west-1.amazonaws.com/findRegion", requestBody, headers);
             if (response.status) {
                 const data = parseJson(response.data);
+                StorageService.setValue("aws", data);
                 addS3Details(data);
             }
         } catch (e) {
