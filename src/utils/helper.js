@@ -3,10 +3,9 @@ import moment from 'moment';
 import { PermissionsAndroid, Platform, ToastAndroid } from 'react-native';
 import RNFS from 'react-native-fs';
 import RNFetchBlob from 'rn-fetch-blob';
-import md5 from 'md5';
-import Crypto from 'react-native-quick-crypto'
 
 import { Image } from 'react-native-compressor';
+import { Linking } from 'react-native';
 
 export function generateFileName(name, user_id, date) {
     if (!name) return '';
@@ -21,48 +20,23 @@ function getHash(message) {
     return crc.crc32(byteArray).toString(16)?.toUpperCase();
 }
 
-export async function getMD5(string) {
+export async function getMD5(filename) {
     try {
-        const hash = await calculateMD5(string);
-        console.log("hash", hash);
-        return hash;
+        const isPermission = await requestPermission();
+        console.log("isPermission", isPermission);
+        if (isPermission) {
+            const path = `${RNFS.ExternalStorageDirectoryPath}/dcim/camera/${filename}`;
+            const hash = await RNFetchBlob.fs.hash(path, "md5");
+
+            console.log("MD5 Hash", hash);
+            return hash
+        }
+        return '';
     } catch (error) {
         // Handle any errors
         console.error("Generating file error: ", error);
     }
 }
-
-async function calculateMD5(filename) {
-    const isPermission = await requestPermission();
-    if (isPermission) {
-        const path = `${RNFS.ExternalStorageDirectoryPath}/dcim/camera/${filename}`;
-        const stat = await RNFetchBlob.fs.hash(path, "md5");
-
-        console.log("Full path", stat);
-        // const absoultePath = RNFS.
-        // const hash = await RNFS.hash(path, "md5");
-        // console.log("inside hash", hash);
-        return '';
-        // const hash = Crypto.createHash('md5');
-
-        // return new Promise((resolve, reject) => {
-        //     fileStream.on('data', (chunk) => {
-        //         hash.update(chunk);
-        //     });
-
-        //     fileStream.on('end', () => {
-        //         const md5Hash = hash.digest('hex');
-        //         console.log("inside hash", hash);
-        //         resolve(md5Hash);
-        //     });
-
-        //     fileStream.on('error', (error) => {
-        //         reject(error);
-        //     });
-        // });
-    }
-    return '';
-};
 
 function getFileExtension(filename) {
     return filename.split('.').pop();
@@ -80,7 +54,7 @@ export function convertUnixTimeSteamp(utcTime) {
 
 export function encodedData(data) {
     return Object.entries(data)
-        .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
+        .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
         .join('&');
 }
 
@@ -90,43 +64,60 @@ export function mergedArr(mainArray, fetchedArray) {
     return [...mainArray, ...uniqueArr2Objs];
 }
 
-export function requestPermission() {
-    return new Promise((resolve, reject) => {
-        if (Platform.OS === "android") {
-            if (Platform.constants['Release'] >= 13) {
-                PermissionsAndroid.requestMultiple(
-                    [PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES,
-                    PermissionsAndroid.PERMISSIONS.READ_MEDIA_VIDEO]
-                ).then((result) => {
-                    if (result['android.permission.READ_MEDIA_IMAGES']
-                        && result['android.permission.READ_MEDIA_VIDEO']
-                        === 'granted') {
-                        resolve(true)
-                    } else if (result['android.permission.READ_MEDIA_IMAGES']
-                        || result['android.permission.READ_MEDIA_VIDEO'] === 'never_ask_again') {
-                        ToastAndroid.show('Please Go into Settings -> Applications -> APP_NAME -> Permissions and Allow permissions to continue');
-                        resolve(false)
-                    }
-                });
+export async function requestPermission() {
+    if (Platform.OS === "android") {
+        try {
+            let permissions = [];
+            const isReleseCode13 = Platform.constants['Release'] >= 13;
+            if (isReleseCode13) {
+                permissions = [
+                    PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES,
+                    PermissionsAndroid.PERMISSIONS.READ_MEDIA_VIDEO
+                ];
             } else {
-                PermissionsAndroid.requestMultiple(
-                    [PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-                    PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE]
-                ).then((result) => {
-                    if (result['android.permission.READ_EXTERNAL_STORAGE']
-                        && result['android.permission.WRITE_EXTERNAL_STORAGE']
-                        === 'granted') {
-                        resolve(true)
-                    } else if (result['android.permission.READ_EXTERNAL_STORAGE']
-                        || result['android.permission.WRITE_EXTERNAL_STORAGE'] === 'never_ask_again') {
-                        ToastAndroid.show('Please Go into Settings -> Applications -> APP_NAME -> Permissions and Allow permissions to continue');
-                        resolve(false)
-                    }
-                });
+                permissions = [
+                    PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
+                    PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE
+                ];
             }
+
+            const result = await PermissionsAndroid.requestMultiple(permissions);
+            if (isReleseCode13) {
+                if (
+                    result['android.permission.READ_MEDIA_IMAGES'] === 'granted' &&
+                    result['android.permission.READ_MEDIA_VIDEO'] === 'granted'
+                ) {
+                    return true;
+                }
+                else if (
+                    result['android.permission.READ_MEDIA_IMAGES'] === 'never_ask_again' ||
+                    result['android.permission.READ_MEDIA_VIDEO'] === 'never_ask_again'
+                ) {
+                    ToastAndroid.show('Please Allow permissions to continue', ToastAndroid.LONG);
+                    Linking.openSettings();
+                }
+            } else {
+                if (
+                    result['android.permission.READ_EXTERNAL_STORAGE'] === 'granted' &&
+                    result['android.permission.WRITE_EXTERNAL_STORAGE'] === 'granted'
+                ) {
+                    return true;
+                } else if (
+                    result['android.permission.READ_EXTERNAL_STORAGE'] === 'never_ask_again' ||
+                    result['android.permission.WRITE_EXTERNAL_STORAGE'] === 'never_ask_again'
+                ) {
+                    ToastAndroid.show('Please Allow permissions to continue', ToastAndroid.LONG);
+                    Linking.openSettings();
+                }
+            }
+            return false;
+        } catch (error) {
+            console.error('Permission request error:', error);
+            return false;
         }
-        resolve(true)
-    })
+    }
+
+    return true;
 }
 
 function isImageFile(filename) {
@@ -243,3 +234,8 @@ export async function compressImageFile(filePath, uploadCallback) {
         console.error(error);
     }
 };
+
+
+export function parseJson(string) {
+    return JSON.parse(JSON.stringify(string));
+}

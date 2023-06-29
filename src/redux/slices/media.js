@@ -3,6 +3,7 @@ import { compressImageFile, convertUnixTimeSteamp, encodedData, generateFileName
 import { eventEmitter } from '../../event';
 import { DBInstance } from '../../service/realm';
 import reactotron from 'reactotron-react-native';
+import api from '../../api';
 
 const initialState = {
     assets: []
@@ -24,9 +25,9 @@ export default mediaSlice.reducer;
 
 export const insertMedia = createAsyncThunk('media/insertMedia', (param = [], thunk) => {
     const assets = thunk.getState().media.assets;
-    console.log("assets", assets);
+    // console.log("assets", assets);
     const newMediaPath = assets.map(i => i.path);
-    console.log("newMediaPath", newMediaPath);
+    // console.log("newMediaPath", newMediaPath);
     const newMedia = param.filter(i => !newMediaPath.includes(i.path));
 
     newMedia.forEach(file => {
@@ -56,7 +57,10 @@ export const loadMediaFromDataBase = createAsyncThunk('media/loadMedia', (callba
 
         if (media.isImage) {
             compressImageFile(media.uri, async (file, deleteFunction) => {
-                const request_payload = {
+                const headers = {
+                    "Authorization": user.firebaseAuthToken?.trim()
+                }
+                const requestBody = {
                     md5: getMD5(file.fileName),
                     file_name: generateFileName(file.fileName, user.user.user_id, file.creationTime),
                     name: file.fileName,
@@ -68,39 +72,19 @@ export const loadMediaFromDataBase = createAsyncThunk('media/loadMedia', (callba
                     file_date: `${convertUnixTimeSteamp(file.creationTime)}`,
                     bucket: aws.bucket,
                     image: file.base64,
-                }
+                };
+                // console.log("requestBody", requestBody);
+                reactotron.log("requestBody", requestBody)
+
                 try {
-
-                    const rawRes = await fetch("https://sdrobz9xp1.execute-api.us-west-1.amazonaws.com/add_live_media_data", {
-                        method: 'POST',
-                        body: request_payload,
-                        headers: {
-                            Authorization: user.firebaseAuthToken?.trim(),
-                        }
-                    })
-                    const res = await rawRes.json();
-                    console.log("Response: ", res);
+                    const response = await api.post("https://sdrobz9xp1.execute-api.us-west-1.amazonaws.com/add_live_media_data", requestBody, headers);
+                    if (response.status) {
+                        const data = parseJson(response.data);
+                        console.log("Media response", JSON.stringify(data, null, 2));
+                    }
                 } catch (e) {
-                    console.log("Media Upload Error: ", e);
+                    console.log("Media Upload error: ", e);
                 }
-
-                // reactotron.log("request_payload", request_payload)
-                // const final_request = encodedData(request_payload);
-                // console.log("--------------------------------------------------------------")
-                // console.log("final_request", final_request)
-                // const xhr = new XMLHttpRequest();
-                // xhr.withCredentials = true;
-
-                // xhr.addEventListener("readystatechange", function () {
-                //     if (this.readyState === 4) {
-                //         console.log(this.responseText);
-                //     }
-                // });
-
-                // xhr.open("POST", "https://sdrobz9xp1.execute-api.us-west-1.amazonaws.com/add_live_media_data");
-                // xhr.setRequestHeader("Authorization", user.firebaseAuthToken?.trim());
-                // xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-                // xhr.send(final_request);
                 await deleteFunction();
             });
         }

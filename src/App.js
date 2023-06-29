@@ -14,6 +14,8 @@ import auth from '@react-native-firebase/auth';
 import { useLoader } from './hooks/useLoader';
 import { useAWS } from './hooks/useAWS';
 import { Event } from './screens/event';
+import api from './api';
+import { parseJson } from './utils/helper';
 
 
 GoogleSignin.configure({
@@ -59,63 +61,60 @@ function NavigationStack() {
     }, [user.firebaseAuthToken]);
 
     useEffect(() => {
-        if (user?.user?.user_id !== '') {
-            // console.log("user?.user?.user_id", user?.user?.user_id, user?.user?.user_id !== '')
+        if (user?.user?.user_id && user?.user?.user_id !== '') {
             fetchS3Details();
         }
     }, [user.user]);
 
-    function login() {
-        const data = "version=1.0&device_name=Vivo%20v15&device=android";
-        const xhr = new XMLHttpRequest();
-        xhr.withCredentials = true;
+    async function login() {
+        const headers = {
+            "Authorization": user.firebaseAuthToken?.trim()
+        }
+        const requestBody = {
+            version: 1,
+            device_name: 'vivo',
+            device: 'android',
+        };
 
-        xhr.addEventListener("readystatechange", function () {
+        try {
             showLoader("Server login...");
-            // console.log("readyState", this.readyState);
-            if (this.readyState === 4) {
-                if (this.status === 200) {
-                    const res = JSON.parse(this.response);
-                    updateInfo({
-                        isLoggedIn: true,
-                        user: res,
-                    });
-                    setInitializing(false);
-                    hideLoader();
-                } else {
-                    console.error("API Error:- ", this.responseText);
-                    setInitializing(false);
-                    hideLoader();
-                    userLogout();
-                }
+            const response = await api.post("https://vq8w0bp7ee.execute-api.us-west-1.amazonaws.com/sign-in", requestBody, headers);
+            if (response.status) {
+                const data = parseJson(response.data);
+                // console.log("Login Response: ", data);
+                updateInfo({
+                    isLoggedIn: true,
+                    user: data,
+                });
             }
-        });
-        xhr.open("POST", "https://vq8w0bp7ee.execute-api.us-west-1.amazonaws.com/sign-in");
-        xhr.setRequestHeader("Authorization", user.firebaseAuthToken?.trim());
-        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-        xhr.send(data);
+            hideLoader();
+            setInitializing(false);
+        } catch (e) {
+            console.log("Login error: ", e);
+            hideLoader();
+            userLogout();
+            setInitializing(false);
+        }
     }
 
-    function fetchS3Details() {
-        const data = `user_id=${user?.user?.user_id}&region=india`;
-        const xhr = new XMLHttpRequest();
-        xhr.withCredentials = true;
+    async function fetchS3Details() {
+        const headers = {
+            "Authorization": user.firebaseAuthToken?.trim()
+        }
+        const requestBody = {
+            user_id: user?.user?.user_id,
+            region: 'india'
+        };
 
-        xhr.addEventListener("readystatechange", function () {
-            if (this.readyState === 4) {
-                if (this.status === 200) {
-                    addS3Details(JSON.parse(this.response));
-                }
+        try {
+            const response = await api.post("https://u6mj6kk2h1.execute-api.us-west-1.amazonaws.com/findRegion", requestBody, headers);
+            if (response.status) {
+                const data = parseJson(response.data);
+                addS3Details(data);
             }
-        });
-
-        // console.log("========================================================")
-        // console.log("data", data)
-        // console.log("========================================================")
-        xhr.open("POST", "https://u6mj6kk2h1.execute-api.us-west-1.amazonaws.com/findRegion");
-        xhr.setRequestHeader("Authorization", user.firebaseAuthToken?.trim());
-        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-        xhr.send(data);
+        } catch (e) {
+            console.log("AWS fetch error: ", e);
+        }
     };
 
     if (__DEV__) {
