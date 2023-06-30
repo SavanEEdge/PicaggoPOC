@@ -7,6 +7,7 @@ import api from '../../api';
 import { getAWSClient } from '../../service/aws';
 import { StorageService } from '../../service/storage_service';
 import RNFS from 'react-native-fs';
+import * as mime from 'react-native-mime-types';
 
 const initialState = {
     assets: []
@@ -63,9 +64,11 @@ export const loadMediaFromDataBase = createAsyncThunk('media/loadMedia', (callba
         const key = `events/${event.event_id}/originals/${media?.name}`;
         console.log("key", key);
         const isFileExists = await checkFileExists(key, client);
-        if (!isFileExists) {
-            uploadImageToS3(media.uri, `events/${event.event_id}/originals/`, client);
-        }
+        // if (!isFileExists) {
+        //     uploadImageToS3(media.uri, key, client);
+        // } else {
+        //     deleteFileFromS3(key, client)
+        // }
         if (media.isImage) {
             // compressImageFile(media.uri, async (file, deleteFunction) => {
             //     const headers = {
@@ -126,18 +129,36 @@ const checkFileExists = async (key, client) => {
     }
 };
 
-const uploadImageToS3 = async (filePath, key, client) => {
+const deleteFileFromS3 = async (key, client) => {
     const awsDetails = StorageService.getValue("aws");
-    const file = {
+    const params = {
         Bucket: awsDetails?.bucket,
         Key: key,
-        Body: RNFS.readFile(filePath, 'base64'),
-        ContentEncoding: 'base64',
-        ContentType: 'image/jpeg',
     };
 
     try {
-        const res = await client.upload(file).promise();
+        const res = await client.deleteObject(params).promise();
+        console.log('File deleted successfully ', res);
+    } catch (error) {
+        console.error('Error deleting file:', error);
+    }
+};
+
+const uploadImageToS3 = async (filePath, key, client) => {
+    const awsDetails = StorageService.getValue("aws");
+    const file = await RNFS.readFile(filePath, 'base64');
+    const mime_type = mime.lookup(filePath);
+    const file_name = getFileName(filePath) || 'photo.jpg';
+
+    const params = {
+        Bucket: awsDetails?.bucket,
+        Key: key,
+        // Body: file,
+        Body: `data:image/jpeg;base64,${file}`,
+    };
+
+    try {
+        const res = await client.upload(params).promise();
         console.log('Image uploaded successfully ', res);
     } catch (error) {
         console.error('Error uploading image:', error);

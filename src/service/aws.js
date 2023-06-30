@@ -1,6 +1,6 @@
 import { StorageService } from './storage_service';
-// import AWS from 'aws-sdk';
-import AWS from 'aws-sdk/dist/aws-sdk-react-native';
+import AWS from 'aws-sdk';
+// import AWS from 'aws-sdk/dist/aws-sdk-react-native';
 
 export const getAWSClient = (() => {
     let client;
