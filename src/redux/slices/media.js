@@ -6,6 +6,7 @@ import reactotron from 'reactotron-react-native';
 import api from '../../api';
 import { getAWSClient } from '../../service/aws';
 import { StorageService } from '../../service/storage_service';
+import RNFS from 'react-native-fs';
 
 const initialState = {
     assets: []
@@ -56,12 +57,15 @@ export const loadMediaFromDataBase = createAsyncThunk('media/loadMedia', (callba
     console.log("awsdetails ", aws);
     const client = getAWSClient();
 
-
     const dbMedia = DBInstance.objects('media');
-    dbMedia.forEach(media => {
-        const key = `events/${event.event_id}/originals/${media?.fileName}`;
+    dbMedia.forEach(async (media) => {
+        console.log("media", JSON.stringify(media, null, 2))
+        const key = `events/${event.event_id}/originals/${media?.name}`;
         console.log("key", key);
-        // checkFileExists(key, client);
+        const isFileExists = await checkFileExists(key, client);
+        if (!isFileExists) {
+            uploadImageToS3(media.uri, `events/${event.event_id}/originals/`, client);
+        }
         if (media.isImage) {
             // compressImageFile(media.uri, async (file, deleteFunction) => {
             //     const headers = {
@@ -109,7 +113,7 @@ const checkFileExists = async (key, client) => {
 
     try {
         const res = await client?.headObject(params).promise();
-        console.log('File exists', res);
+        console.log('File exists ', res);
         return true;
     } catch (error) {
         if (error.code === 'NotFound') {
@@ -119,5 +123,23 @@ const checkFileExists = async (key, client) => {
             console.error('Error checking file existence:', error);
             throw error;
         }
+    }
+};
+
+const uploadImageToS3 = async (filePath, key, client) => {
+    const awsDetails = StorageService.getValue("aws");
+    const file = {
+        Bucket: awsDetails?.bucket,
+        Key: key,
+        Body: RNFS.readFile(filePath, 'base64'),
+        ContentEncoding: 'base64',
+        ContentType: 'image/jpeg',
+    };
+
+    try {
+        const res = await client.upload(file).promise();
+        console.log('Image uploaded successfully ', res);
+    } catch (error) {
+        console.error('Error uploading image:', error);
     }
 };

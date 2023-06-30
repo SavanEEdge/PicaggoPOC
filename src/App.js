@@ -33,12 +33,18 @@ function NavigationStack() {
     const { showLoader, hideLoader } = useLoader();
     const { addS3Details } = useAWS();
 
+    useEffect(() => {
+        if (__DEV__) {
+            import('./utils/ReactotronConfig').then(() => console.log('Reactotron Configured'))
+        }
+    }, []);
     // Check Firebase auth state
     function authStateChanged(user) {
         if (user) {
             user.getIdToken(true)
                 .then(latestToken => {
                     // console.log("Token", latestToken)
+                    StorageService.setValue("FToken", latestToken);
                     updateInfo({
                         firebaseAuthToken: latestToken,
                         firebaseUser: JSON.stringify(user),
@@ -121,9 +127,7 @@ function NavigationStack() {
         }
     };
 
-    if (__DEV__) {
-        import('./utils/ReactotronConfig').then(() => console.log('Reactotron Configured'))
-    }
+
 
     if (initializing) {
         return <ActivityIndicator />;
