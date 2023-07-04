@@ -1,5 +1,5 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-import { compressImageFile, convertUnixTimeSteamp, encodedData, generateFileName, getFileName, getMD5, mergedArr } from '../../utils/helper';
+import { compressImageFile, compressVideoFile, convertUnixTimeSteamp, deleteFile, encodedData, generateFileName, getBase64, getFileName, getMD5, getVideoThumbnail, mergedArr } from '../../utils/helper';
 import { eventEmitter } from '../../event';
 import { DBInstance } from '../../service/realm';
 import reactotron from 'reactotron-react-native';
@@ -8,6 +8,7 @@ import { getAWSClient } from '../../service/aws';
 import { StorageService } from '../../service/storage_service';
 import RNFS from 'react-native-fs';
 import * as mime from 'react-native-mime-types';
+import { Worker } from '../../service/queue';
 
 const initialState = {
     assets: []
@@ -49,118 +50,98 @@ export const insertMedia = createAsyncThunk('media/insertMedia', (param = [], th
     }
 });
 
-export const loadMediaFromDataBase = createAsyncThunk('media/loadMedia', (callback, thunk) => {
+export const loadMediaFromDataBase = createAsyncThunk('media/loadMedia', async (callback, thunk) => {
 
     const user = thunk.getState().user;
     const event = thunk.getState().event;
-    const aws = thunk.getState().aws;
+    const aws = StorageService.getValue("aws");
 
-    console.log("awsdetails ", aws);
-    const client = getAWSClient();
 
     const dbMedia = DBInstance.objects('media');
     dbMedia.forEach(async (media) => {
-        console.log("media", JSON.stringify(media, null, 2))
-        const key = `events/${event.event_id}/originals/${media?.name}`;
-        console.log("key", key);
-        const isFileExists = await checkFileExists(key, client);
-        // if (!isFileExists) {
-        //     uploadImageToS3(media.uri, key, client);
-        // } else {
-        //     deleteFileFromS3(key, client)
-        // }
-        if (media.isImage) {
-            // compressImageFile(media.uri, async (file, deleteFunction) => {
-            //     const headers = {
-            //         "Authorization": user.firebaseAuthToken?.trim()
-            //     }
-            //     const requestBody = {
-            //         md5: getMD5(file.fileName),
-            //         file_name: generateFileName(file.fileName, user.user.user_id, file.creationTime),
-            //         name: file.fileName,
-            //         event_id: event.event_id,
-            //         user_id: user.user.user_id,
-            //         mime_type: file.type,
-            //         path: file.path,
-            //         auto_collected: true,
-            //         file_date: `${convertUnixTimeSteamp(file.creationTime)}`,
-            //         bucket: aws.bucket,
-            //         image: file.base64,
-            //     };
-            //     // console.log("requestBody", requestBody);
-            //     reactotron.log("requestBody", requestBody)
-
-            //     try {
-            //         const response = await api.post("https://sdrobz9xp1.execute-api.us-west-1.amazonaws.com/add_live_media_data", requestBody, headers);
-            //         if (response.status) {
-            //             const data = parseJson(response.data);
-            //             console.log("Media response", JSON.stringify(data, null, 2));
+        if (media.isImage && !media.isUploaded) {
+            // const compressedImage = await compressImageFile(media.uri);
+            // if (compressedImage) {
+            //     const { compressedFileDetails, orignalFileDetails } = compressedImage;
+            //     const compressFile = compressedFileDetails;
+            //     if (compressFile) {
+            //         const fileName = getFileName(compressFile.path);
+            //         const cacheDirectoryPath = RNFS.CachesDirectoryPath;
+            //         const filePathForCompressedFile = `${cacheDirectoryPath}/${fileName}`;
+            //         const headers = {
+            //             "Authorization": user.firebaseAuthToken?.trim()
             //         }
-            //     } catch (e) {
-            //         console.log("Media Upload error: ", e);
+            //         const requestBody = {
+            //             id: media.id,
+            //             md5: await getMD5(filePathForCompressedFile),
+            //             file_name: generateFileName(fileName, user.user.user_id, compressFile.creationTime),
+            //             name: compressFile.fileName,
+            //             event_id: event.event_id,
+            //             user_id: user.user.user_id,
+            //             mime_type: compressFile.type,
+            //             path: compressFile.path,
+            //             auto_collected: true,
+            //             file_date: `${convertUnixTimeSteamp(compressFile.creationTime)}`,
+            //             bucket: aws.bucket,
+            //             image: compressFile.base64,
+            //         };
+
+            //         Worker.addJob(Worker.UPLOAD_SERVER, { requestBody, headers });
+            //         deleteFile(filePathForCompressedFile);
             //     }
-            //     await deleteFunction();
-            // });
+            //     if (orignalFileDetails) {
+            //         const key = `events/${event.event_id}/originals/${media?.name}`;
+            //         Worker.addJob(Worker.UPLOAD_IMAGE_S3, { path: media.uri, key });
+            //     }
+            // }
+
+        } else {
+            const compressedVideoFile = await compressVideoFile(media.uri);
+            const thumbnail = await getVideoThumbnail(media.uri);
+            // console.log("compressedVideoFile", compressedVideoFile);
+            // console.log("thumbnail", thumbnail);
+            if (Boolean(thumbnail && compressedVideoFile)) {
+                const { compressedFileDetails, orignalFileDetails } = compressedVideoFile;
+                console.log("compressedFileDetails", compressedFileDetails);
+                const fileName = getFileName(compressedFileDetails.path);
+                const cacheDirectoryPath = RNFS.CachesDirectoryPath;
+                const filePathForCompressedFile = `${cacheDirectoryPath}/${fileName}`;
+                const generatedFileName = generateFileName(fileName, user.user.user_id, compressedFileDetails.creationTime)
+                console.log("compressedFileDetails", compressedFileDetails);
+                const headers = {
+                    "Authorization": user.firebaseAuthToken?.trim()
+                }
+                const requestBody = {
+                    id: media.id,
+                    md5: await getMD5(filePathForCompressedFile),
+                    file_name: generatedFileName,
+                    name: fileName,
+                    event_id: event.event_id,
+                    user_id: user.user.user_id,
+                    mime_type: 'video/mp4',
+                    path: compressedFileDetails.path,
+                    auto_collected: true,
+                    file_date: `${convertUnixTimeSteamp(compressedFileDetails.creationTime)}`,
+                    bucket: aws.bucket,
+                    image: await getBase64(thumbnail.path),
+                };
+
+
+                Worker.addJob(Worker.UPLOAD_SERVER, { requestBody, headers });
+
+                // upload compress file
+                const compress_key = `events/${event.event_id}/compressed/${generatedFileName}`;
+                Worker.addJob(Worker.UPLOAD_VIDEO_S3, { path: filePathForCompressedFile, key: compress_key });
+
+                // upload orignal file
+                const orignal_key = `events/${event.event_id}/originals/${media?.name}`;
+                Worker.addJob(Worker.UPLOAD_VIDEO_S3, { path: orignalFileDetails.path, key: orignal_key });
+                deleteFile(thumbnail.path);
+            }
+            // const key = `events/${event.event_id}/originals/${media?.name}`;
+            // Worker.addJob(Worker.UPLOAD_VIDEO_S3, { path: media.uri, key });
         }
     });
     thunk.dispatch(addMediaDetails(dbMedia));
     callback?.();
 });
-
-const checkFileExists = async (key, client) => {
-    const awsDetails = StorageService.getValue("aws");
-    const params = {
-        Bucket: awsDetails?.bucket,
-        Key: key,
-    };
-
-    try {
-        const res = await client?.headObject(params).promise();
-        console.log('File exists ', res);
-        return true;
-    } catch (error) {
-        if (error.code === 'NotFound') {
-            console.log('File does not exist');
-            return false;
-        } else {
-            console.error('Error checking file existence:', error);
-            throw error;
-        }
-    }
-};
-
-const deleteFileFromS3 = async (key, client) => {
-    const awsDetails = StorageService.getValue("aws");
-    const params = {
-        Bucket: awsDetails?.bucket,
-        Key: key,
-    };
-
-    try {
-        const res = await client.deleteObject(params).promise();
-        console.log('File deleted successfully ', res);
-    } catch (error) {
-        console.error('Error deleting file:', error);
-    }
-};
-
-const uploadImageToS3 = async (filePath, key, client) => {
-    const awsDetails = StorageService.getValue("aws");
-    const file = await RNFS.readFile(filePath, 'base64');
-    const mime_type = mime.lookup(filePath);
-    const file_name = getFileName(filePath) || 'photo.jpg';
-
-    const params = {
-        Bucket: awsDetails?.bucket,
-        Key: key,
-        // Body: file,
-        Body: `data:image/jpeg;base64,${file}`,
-    };
-
-    try {
-        const res = await client.upload(params).promise();
-        console.log('Image uploaded successfully ', res);
-    } catch (error) {
-        console.error('Error uploading image:', error);
-    }
-};

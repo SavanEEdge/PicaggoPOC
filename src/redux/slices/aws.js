@@ -3,7 +3,7 @@ import { createSlice } from '@reduxjs/toolkit';
 const initialState = {};
 
 const awsSlice = createSlice({
-    name: 'event',
+    name: 'aws',
     initialState,
     reducers: {
         addDetails(state, action) {

@@ -4,8 +4,12 @@ import { PermissionsAndroid, Platform, ToastAndroid } from 'react-native';
 import RNFS from 'react-native-fs';
 import RNFetchBlob from 'rn-fetch-blob';
 
-import { Image } from 'react-native-compressor';
+import * as mime from 'react-native-mime-types';
+
+import { Image, Video } from 'react-native-compressor';
 import { Linking } from 'react-native';
+import { createThumbnail } from '../third_party/react-native-create-thumbnail';
+import reactotron from 'reactotron-react-native';
 
 export function generateFileName(name, user_id, date) {
     if (!name) return '';
@@ -20,13 +24,12 @@ function getHash(message) {
     return crc.crc32(byteArray).toString(16)?.toUpperCase();
 }
 
-export async function getMD5(filename) {
+export async function getMD5(filePath) {
     try {
         const isPermission = await requestPermission();
-        console.log("isPermission", isPermission);
         if (isPermission) {
-            const path = `${RNFS.ExternalStorageDirectoryPath}/dcim/camera/${filename}`;
-            const hash = await RNFetchBlob.fs.hash(path, "md5");
+            // const path = `${RNFS.ExternalStorageDirectoryPath}/dcim/camera/${filename}`;
+            const hash = await RNFetchBlob.fs.hash(filePath, "md5");
 
             console.log("MD5 Hash", hash);
             return hash
@@ -185,7 +188,6 @@ export function getFileName(filePath = '') {
 export async function getFileDetails(filePath) {
     try {
         const statResult = await RNFS.stat(filePath);
-        const base64 = await RNFS.readFile(filePath, 'base64');
 
         // Extract the file details
         const { size, ctime, mtime } = statResult;  // need to check on ios
@@ -196,9 +198,10 @@ export async function getFileDetails(filePath) {
         const fileSizeInMB = fileSizeInKB / 1024;
 
         return {
+            name: getFileName(filePath),
             path: filePath,
-            base64: `data:image/jpeg;base64,${base64}`,
-            type: 'image/jpeg',
+            base64: await getBase64(filePath),
+            type: mime.lookup(filePath),
             size: fileSizeInBytes,
             sizeInKB: fileSizeInKB,
             sizeInMB: fileSizeInMB,
@@ -212,7 +215,7 @@ export async function getFileDetails(filePath) {
 }
 
 
-export async function compressImageFile(filePath, uploadCallback) {
+export async function compressImageFile(filePath) {
     try {
         const compressedFilePath = await Image.compress(filePath, { compressionMethod: 'auto' });
         // Handle the compressed file
@@ -220,22 +223,99 @@ export async function compressImageFile(filePath, uploadCallback) {
         const cacheDirectoryPath = RNFS.CachesDirectoryPath;
         const filePathForCompressedFile = `${cacheDirectoryPath}/${fileName}`;
         const compressedFileDetails = await getFileDetails(filePathForCompressedFile);
-        const fileDetails = { ...compressedFileDetails, fileName: getFileName(filePath) };
+        const orignalFileDetails = await getFileDetails(filePath);
 
-        if (fileDetails.sizeInKB <= 500) {
-            uploadCallback?.(fileDetails, async () => {
-                await deleteFile(filePathForCompressedFile);
-            });
-        } else {
-            await deleteFile(filePathForCompressedFile);
+        if (compressedFileDetails.sizeInKB <= 500) {
+            return { compressedFileDetails, orignalFileDetails };
         }
+        return compressImageFile(compressedFileDetails.path);
     } catch (error) {
-        // Handle the error
+        console.error("Image Compression Error: ", error);
+        return null;
+    }
+};
+
+export async function getVideoFileDetails(filePath) {
+    try {
+        const statResult = await RNFS.stat(filePath);
+        // Extract the file details
+        const { size, ctime, mtime } = statResult;  // need to check on ios
+
+        // Convert the size to a human-readable format
+        const fileSizeInBytes = size;
+        const fileSizeInKB = fileSizeInBytes / 1024;
+        const fileSizeInMB = fileSizeInKB / 1024;
+
+        return {
+            name: getFileName(filePath),
+            path: filePath,
+            type: mime.lookup(filePath),
+            size: fileSizeInBytes,
+            sizeInKB: fileSizeInKB,
+            sizeInMB: fileSizeInMB,
+            creationTime: ctime,
+            modificationTime: mtime,
+        };
+    } catch (error) {
         console.error(error);
+        return null;
+    }
+}
+
+export async function compressVideoFile(filePath) {
+    try {
+        const compressedFilePath = await Video.compress(filePath, { compressionMethod: 'auto' }, (progress) => {
+            console.log("Compressor Progress ", progress);
+        });
+        // Handle the compressed file
+        const fileName = getFileName(compressedFilePath);
+        const cacheDirectoryPath = RNFS.CachesDirectoryPath;
+        const filePathForCompressedFile = `${cacheDirectoryPath}/${fileName}`;
+        const compressedFileDetails = await getVideoFileDetails(filePathForCompressedFile);
+        const orignalFileDetails = await getVideoFileDetails(filePath);
+        return { compressedFileDetails, orignalFileDetails };
+    } catch (error) {
+        console.error("Image Compression Error: ", error);
+        return null;
     }
 };
 
 
 export function parseJson(string) {
     return JSON.parse(JSON.stringify(string));
+}
+
+export function sleep(time) {
+    return new Promise((resolve) => setTimeout(() => resolve(), time));
+}
+
+export async function fetchResourceFromURI(uri) {
+    try {
+        const fileContents = await getBase64(uri);
+        const blob = new Blob([fileContents], { type: 'application/octet-stream' });
+        console.log("blob", blob);
+        return blob;
+        // console.log("URI", uri);
+        // const response = await fetch(uri);
+        // const blob = await response.blob();
+        // return blob;
+    } catch (e) {
+        console.log('fetchResourceFromURI', e);
+    }
+};
+
+
+export async function getVideoThumbnail(uri) {
+    if (Platform.OS === 'android') {
+        const thumbnail_response = await createThumbnail({
+            url: uri,
+            timeStamp: 1000,
+        });
+        return thumbnail_response;
+    }
+}
+
+export async function getBase64(filePath) {
+    const base64 = await RNFS.readFile(filePath, 'base64');
+    return base64;
 }
