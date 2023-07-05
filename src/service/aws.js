@@ -2,10 +2,11 @@ import { StorageService } from './storage_service';
 import AWS from 'aws-sdk';
 import { Platform } from 'react-native';
 import RNFS from 'react-native-fs';
-import { fetchResourceFromURI, getBase64 } from '../utils/helper';
+import { fetchResourceFromURI, getBase64, getFileName, getVideoFileDetails, sleep } from '../utils/helper';
 import reactotron from 'reactotron-react-native';
 import RNFetchBlob from 'rn-fetch-blob';
 // import AWS from 'aws-sdk/dist/aws-sdk-react-native';
+import ChunkUpload from '../third_party/react-native-chunk-upload';
 
 export const getAWSClient = (() => {
     let client;
@@ -28,6 +29,10 @@ export const getAWSClient = (() => {
                 params: { Bucket: awsDetails?.bucket },
                 region: awsDetails?.region_name
             });
+
+            // client.upload({
+            //     Body
+            // })
 
         }
 
@@ -123,129 +128,85 @@ export async function uploadVideoToS3(filePath, Key) {
 
     const response = await checkFileExists(Key);
     if (!response.isFileExists) {
+        const fileDetails = await getVideoFileDetails(filePath);
+        console.log("fileDetails", JSON.stringify(fileDetails, null, 2))
 
-        const fs = RNFetchBlob.fs;
-        const { Readable } = RNFetchBlob.polyfill;
-
-        const params = {
-            Bucket: awsDetails?.bucket,
-            Key,
-        };
-
-        const { UploadId } = await client.createMultipartUpload(params).promise();
-
-        // const fileStat = await fs.stat(filePath);
-        // const fileSize = fileStat.size;
-        // const partSize = 5 * 1024 * 1024; // 5MB per part (adjust as needed)
-        // const totalParts = Math.ceil(fileSize / partSize);
-        // const uploadPromises = [];
-        // for (let partNumber = 1; partNumber <= totalParts; partNumber++) {
-        //     const start = (partNumber - 1) * partSize;
-        //     const end = Math.min(start + partSize, fileSize);
-        //     const partParams = {
-        //         ...params,
-        //         PartNumber: partNumber,
-        //         UploadId,
+        // if (fileDetails.sizeInKB < 5000) {
+        //     // upload normally
+        //     console.log("Upload with blob")
+        //     const file = await getBase64(filePath);
+        //     const params = {
+        //         Bucket: awsDetails?.bucket,
+        //         Key,
+        //         Body: file,
         //     };
-        //     const readStream = await fs.readStream(filePath, 'base64', start, end);
-        //     const partBody = new Readable();
-        //     partBody._read = () => { };
-        //     readStream.open();
-        //     readStream.onData((chunk) => {
-        //         partBody.push(chunk);
+
+        //     const upload_request = client.upload(params)
+        //     upload_request.on('httpUploadProgress', (progress) => {
+        //         const uploadedBytes = progress.loaded;
+        //         const totalBytes = progress.total;
+        //         const percentProgress = Math.round((uploadedBytes / totalBytes) * 100);
+
+        //         console.log(`Upload progress: ${percentProgress}%`, uploadedBytes, totalBytes);
         //     });
-        //     readStream.onError((err) => {
-        //         console.error('Error reading video stream:', err);
-        //         partBody.destroy(err);
-        //     })
-        //     readStream.onEnd(() => {
-        //         partBody.push(null);
-        //     })
+        //     const res = await upload_request.promise();
+        //     console.log('Image uploaded successfully ', res);
+        //     resolve(res);
+        // } else {
+        //     // upload multipart
 
-        //     partParams.Body = partBody;
-        //     const uploadPartPromise = s3.uploadPart(partParams).promise();
-        //     console.log("uploadPartPromise", uploadPartPromise);
-        //     uploadPromises.push(uploadPartPromise);
-        // }
-        const uploadedParts = await Promise.all(uploadPromises);
-        reactotron.log("uploadedParts", uploadedParts);
+        //     const fs = RNFetchBlob.fs;
 
+        //     const params = {
+        //         Bucket: awsDetails?.bucket,
+        //         Key,
+        //     };
 
-        // RNFetchBlob.fs.readStream(filePath, 'base64', 5 * 1024 * 1024).then((streamReader) => {
-
-        //     streamReader.open();
-
-        //     streamReader.onData(async (chunk) => {
-        //         try {
-        //             const partParams = {
-        //                 Bucket: awsDetails?.bucket,
-        //                 Key,
-        //                 PartNumber: partNumber,
-        //                 UploadId,
-        //                 Body: chunk,
-        //             };
-        //             console.log("partNumber ", partNumber, UploadId);
-        //             const upload_request = await client.uploadPart(partParams);
-        //             upload_request.on('httpUploadProgress', (progress) => {
-        //                 const uploadedBytes = progress.loaded;
-        //                 const totalBytes = progress.total;
-        //                 const percentProgress = Math.round((uploadedBytes / totalBytes) * 100);
-
-        //                 console.log(`Upload progress: ${percentProgress}%`, uploadedBytes, totalBytes);
-        //             });
-        //             const uploadPartResponse = await upload_request.promise();
-
-        //             console.log("uploadPartResponse", uploadPartResponse);
-        //             uploadPartRes.push(uploadPartResponse);
-        //             partNumber += 1;
-        //         } catch (e) {
-        //             console.log("Part Upload Error ", e)
+        //     const { UploadId } = await client.createMultipartUpload(params).promise();
+        //     const fileStat = await fs.stat(filePath);
+        //     const fileName = getFileName(filePath);
+        //     const uploadPromises = [];
+        //     const chunk = new ChunkUpload({
+        //         path: filePath,
+        //         size: 5242880,
+        //         fileSize: fileStat.size,
+        //         fileName,
+        //         onFetchBlobError: (e) => console.log(e),
+        //         onWriteFileError: (e) => console.log(e),
+        //         onEnd: async () => {
+        //             try {
+        //                 const completeParams = {
+        //                     ...params,
+        //                     UploadId,
+        //                     MultipartUpload: {
+        //                         Parts: uploadPromises,
+        //                     },
+        //                 };
+        //                 reactotron.log("completeParams", completeParams)
+        //                 client.completeMultipartUpload(completeParams).promise().then(res => JSON.stringify(res, null, 2)).catch(e => console.log("Final Error ", e));
+        //             } catch (e) {
+        //                 console.log("Final completeMultipartUpload error ", e);
+        //             }
         //         }
-
-        //     })
-
-        //     streamReader.onError((err) => {
-        //         partNumber = 1;
-        //         reject(err);
-        //     })
-
-        //     streamReader.onEnd(async () => {
-        //         partNumber = 1;
-        //         reactotron.log("uploadedParts", uploadPartRes);
-
-        //         resolve();
         //     });
-        // });
+        //     chunk.digIn(async (file, next) => {
+        //         console.log("file", file.number);
 
-
-
-
-        // const uploadResults = await Promise.all(uploadPromises);
-        // const res = client.completeMultipartUpload()
+        //         // await sleep(500);
+        //         const partParams = {
+        //             ...params,
+        //             PartNumber: file.number,
+        //             UploadId,
+        //             Body: await fetchResourceFromURI(file.blob.uri),
+        //         };
+        //         const uploadPartPromise = await client.uploadPart(partParams).promise();
+        //         console.log("uploadPartPromise", uploadPartPromise);
+        //         uploadPromises.push({
+        //             ETag: uploadPartPromise.ETag,
+        //             PartNumber: file.number,
+        //         });
+        //         next();
+        //     });
+        // }
     }
-
-
-
-
 };
-
-// return new Promise(async (resolve, reject) => {
-                    //     try {
-
-                    //         const upload_request = client.upload(params)
-                    //         upload_request.on('httpUploadProgress', (progress) => {
-                    //             const uploadedBytes = progress.loaded;
-                    //             const totalBytes = progress.total;
-                    //             const percentProgress = Math.round((uploadedBytes / totalBytes) * 100);
-
-                    //             console.log(`Upload progress: ${percentProgress}%`, uploadedBytes, totalBytes);
-                    //         });
-                    //         const res = await upload_request.promise();
-                    //         console.log('Video uploaded Chunk ', res);
-
-
-                    //     } catch (error) {
-                    //         console.error('Error uploading video:', error);
-                    //         reject(error);
-                    //     }
-                    // })

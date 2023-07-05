@@ -7,6 +7,7 @@ import api from '../../api';
 import { getAWSClient } from '../../service/aws';
 import { StorageService } from '../../service/storage_service';
 import RNFS from 'react-native-fs';
+import RNFetchBlob from 'rn-fetch-blob';
 import * as mime from 'react-native-mime-types';
 import { Worker } from '../../service/queue';
 
@@ -98,6 +99,20 @@ export const loadMediaFromDataBase = createAsyncThunk('media/loadMedia', async (
         } else {
             const compressedVideoFile = await compressVideoFile(media.uri);
             const thumbnail = await getVideoThumbnail(media.uri);
+            // if (compressedVideoFile) {
+            //     try {
+            //         const { compressedFileDetails } = compressedVideoFile;
+            //         const fileName = getFileName(compressedFileDetails.path);
+            //         const cacheDirectoryPath = RNFS.CachesDirectoryPath;
+            //         const filePathForCompressedFile = `${cacheDirectoryPath}/${fileName}`;
+            //         const destinationPath = `${RNFetchBlob.fs.dirs.DownloadDir}/downloadedFile.mp4`;
+
+            //         // Copy the file using RNFetchBlob
+            //         await RNFetchBlob.fs.cp(filePathForCompressedFile, destinationPath);
+            //     } catch (e) {
+            //         console.log("Copy Error: ", e);
+            //     }
+            // }
             // console.log("compressedVideoFile", compressedVideoFile);
             // console.log("thumbnail", thumbnail);
             if (Boolean(thumbnail && compressedVideoFile)) {

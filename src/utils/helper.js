@@ -293,12 +293,8 @@ export async function fetchResourceFromURI(uri) {
     try {
         const fileContents = await getBase64(uri);
         const blob = new Blob([fileContents], { type: 'application/octet-stream' });
-        console.log("blob", blob);
+        // console.log("blob", blob);
         return blob;
-        // console.log("URI", uri);
-        // const response = await fetch(uri);
-        // const blob = await response.blob();
-        // return blob;
     } catch (e) {
         console.log('fetchResourceFromURI', e);
     }
