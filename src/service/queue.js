@@ -5,8 +5,7 @@ import { UploadStart } from './Worker';
 class WorkerClass {
 
     UPLOAD_SERVER = 'upload_server';
-    UPLOAD_IMAGE_S3 = 'upload_img_s3';
-    UPLOAD_VIDEO_S3 = 'upload_vid_s3';
+    UPLOAD_S3 = 'UPLOAD_S3';
 
     constructor() {
         this.queue = null;
@@ -23,16 +22,9 @@ class WorkerClass {
             });
         });
 
-        this.queue.addWorker(this.UPLOAD_IMAGE_S3, async (id, payload) => {
+        this.queue.addWorker(this.UPLOAD_S3, async (id, payload) => {
             await new Promise(async (resolve) => {
-                await UploadStart({ action: this.UPLOAD_IMAGE_S3, payload });
-                resolve();
-            });
-        });
-
-        this.queue.addWorker(this.UPLOAD_VIDEO_S3, async (id, payload) => {
-            await new Promise(async (resolve) => {
-                await UploadStart({ action: this.UPLOAD_VIDEO_S3, payload });
+                await UploadStart({ action: this.UPLOAD_S3, payload });
                 resolve();
             });
         });

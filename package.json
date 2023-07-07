@@ -20,6 +20,7 @@
     "@reduxjs/toolkit": "^1.9.5",
     "apisauce": "^3.0.1",
     "aws-sdk": "^2.1408.0",
+    "base64-arraybuffer": "^1.0.2",
     "crc": "^4.3.2",
     "eventemitter3": "^5.0.1",
     "moment": "^2.29.4",

@@ -36,15 +36,21 @@ export const insertMedia = createAsyncThunk('media/insertMedia', (param = [], th
     // console.log("newMediaPath", newMediaPath);
     const newMedia = param.filter(i => !newMediaPath.includes(i.path));
 
-    newMedia.forEach(file => {
+    newMedia.forEach(async (media) => {
         DBInstance.write(() => {
             const newObject = {
-                id: `${file.timeStamp}`,
-                ...file
+                id: `${media.timeStamp}`,
+                ...media
             };
 
             DBInstance.create('media', newObject);
-        })
+        });
+
+        if (media.isImage && !media.isUploaded) {
+            await uploadImage(media, user, event, aws);
+        } else if (!media.isImage && !media.isUploaded) {
+            await uploadVideo(media, user, event, aws);
+        }
     });
     if (newMedia?.length > 0) {
         eventEmitter.emit('media', newMedia);
@@ -61,102 +67,90 @@ export const loadMediaFromDataBase = createAsyncThunk('media/loadMedia', async (
     const dbMedia = DBInstance.objects('media');
     dbMedia.forEach(async (media) => {
         if (media.isImage && !media.isUploaded) {
-            // const compressedImage = await compressImageFile(media.uri);
-            // if (compressedImage) {
-            //     const { compressedFileDetails, orignalFileDetails } = compressedImage;
-            //     const compressFile = compressedFileDetails;
-            //     if (compressFile) {
-            //         const fileName = getFileName(compressFile.path);
-            //         const cacheDirectoryPath = RNFS.CachesDirectoryPath;
-            //         const filePathForCompressedFile = `${cacheDirectoryPath}/${fileName}`;
-            //         const headers = {
-            //             "Authorization": user.firebaseAuthToken?.trim()
-            //         }
-            //         const requestBody = {
-            //             id: media.id,
-            //             md5: await getMD5(filePathForCompressedFile),
-            //             file_name: generateFileName(fileName, user.user.user_id, compressFile.creationTime),
-            //             name: compressFile.fileName,
-            //             event_id: event.event_id,
-            //             user_id: user.user.user_id,
-            //             mime_type: compressFile.type,
-            //             path: compressFile.path,
-            //             auto_collected: true,
-            //             file_date: `${convertUnixTimeSteamp(compressFile.creationTime)}`,
-            //             bucket: aws.bucket,
-            //             image: compressFile.base64,
-            //         };
-
-            //         Worker.addJob(Worker.UPLOAD_SERVER, { requestBody, headers });
-            //         deleteFile(filePathForCompressedFile);
-            //     }
-            //     if (orignalFileDetails) {
-            //         const key = `events/${event.event_id}/originals/${media?.name}`;
-            //         Worker.addJob(Worker.UPLOAD_IMAGE_S3, { path: media.uri, key });
-            //     }
-            // }
-
-        } else {
-            const compressedVideoFile = await compressVideoFile(media.uri);
-            const thumbnail = await getVideoThumbnail(media.uri);
-            // if (compressedVideoFile) {
-            //     try {
-            //         const { compressedFileDetails } = compressedVideoFile;
-            //         const fileName = getFileName(compressedFileDetails.path);
-            //         const cacheDirectoryPath = RNFS.CachesDirectoryPath;
-            //         const filePathForCompressedFile = `${cacheDirectoryPath}/${fileName}`;
-            //         const destinationPath = `${RNFetchBlob.fs.dirs.DownloadDir}/downloadedFile.mp4`;
-
-            //         // Copy the file using RNFetchBlob
-            //         await RNFetchBlob.fs.cp(filePathForCompressedFile, destinationPath);
-            //     } catch (e) {
-            //         console.log("Copy Error: ", e);
-            //     }
-            // }
-            // console.log("compressedVideoFile", compressedVideoFile);
-            // console.log("thumbnail", thumbnail);
-            if (Boolean(thumbnail && compressedVideoFile)) {
-                const { compressedFileDetails, orignalFileDetails } = compressedVideoFile;
-                console.log("compressedFileDetails", compressedFileDetails);
-                const fileName = getFileName(compressedFileDetails.path);
-                const cacheDirectoryPath = RNFS.CachesDirectoryPath;
-                const filePathForCompressedFile = `${cacheDirectoryPath}/${fileName}`;
-                const generatedFileName = generateFileName(fileName, user.user.user_id, compressedFileDetails.creationTime)
-                console.log("compressedFileDetails", compressedFileDetails);
-                const headers = {
-                    "Authorization": user.firebaseAuthToken?.trim()
-                }
-                const requestBody = {
-                    id: media.id,
-                    md5: await getMD5(filePathForCompressedFile),
-                    file_name: generatedFileName,
-                    name: fileName,
-                    event_id: event.event_id,
-                    user_id: user.user.user_id,
-                    mime_type: 'video/mp4',
-                    path: compressedFileDetails.path,
-                    auto_collected: true,
-                    file_date: `${convertUnixTimeSteamp(compressedFileDetails.creationTime)}`,
-                    bucket: aws.bucket,
-                    image: await getBase64(thumbnail.path),
-                };
-
-
-                Worker.addJob(Worker.UPLOAD_SERVER, { requestBody, headers });
-
-                // upload compress file
-                const compress_key = `events/${event.event_id}/compressed/${generatedFileName}`;
-                Worker.addJob(Worker.UPLOAD_VIDEO_S3, { path: filePathForCompressedFile, key: compress_key });
-
-                // upload orignal file
-                const orignal_key = `events/${event.event_id}/originals/${media?.name}`;
-                Worker.addJob(Worker.UPLOAD_VIDEO_S3, { path: orignalFileDetails.path, key: orignal_key });
-                deleteFile(thumbnail.path);
-            }
-            // const key = `events/${event.event_id}/originals/${media?.name}`;
-            // Worker.addJob(Worker.UPLOAD_VIDEO_S3, { path: media.uri, key });
+            await uploadImage(media, user, event, aws);
+        } else if (!media.isImage && !media.isUploaded) {
+            await uploadVideo(media, user, event, aws);
         }
     });
     thunk.dispatch(addMediaDetails(dbMedia));
     callback?.();
 });
+
+
+export async function uploadVideo(media, user, event, aws) {
+    const compressedVideoFile = await compressVideoFile(media.uri);
+    const thumbnail = await getVideoThumbnail(media.uri);
+    if (Boolean(thumbnail && compressedVideoFile)) {
+        const { compressedFileDetails, orignalFileDetails } = compressedVideoFile;
+        const fileName = getFileName(compressedFileDetails.path);
+        const cacheDirectoryPath = RNFS.CachesDirectoryPath;
+        const filePathForCompressedFile = `${cacheDirectoryPath}/${fileName}`;
+        const generatedFileName = generateFileName(fileName, user.user.user_id, compressedFileDetails.creationTime)
+        const headers = {
+            "Authorization": user.firebaseAuthToken?.trim()
+        }
+        const requestBody = {
+            id: media.id,
+            md5: await getMD5(filePathForCompressedFile),
+            file_name: generatedFileName,
+            name: fileName,
+            event_id: event.event_id,
+            user_id: user.user.user_id,
+            mime_type: 'video/mp4',
+            path: compressedFileDetails.path,
+            auto_collected: true,
+            file_date: `${convertUnixTimeSteamp(compressedFileDetails.creationTime)}`,
+            bucket: aws.bucket,
+            image: await getBase64(thumbnail.path),
+        };
+
+
+        Worker.addJob(Worker.UPLOAD_SERVER, { requestBody, headers, filePath: thumbnail.path });
+
+        // upload compress file
+        const compress_key = `events/${event.event_id}/compressed/${generatedFileName}`;
+        Worker.addJob(Worker.UPLOAD_S3, { path: filePathForCompressedFile, key: compress_key, id: media.id });
+
+        // upload orignal file
+        const orignal_key = `events/${event.event_id}/originals/${media?.name}`;
+        Worker.addJob(Worker.UPLOAD_S3, { path: orignalFileDetails.path, key: orignal_key, id: media.id });
+        deleteFile(thumbnail.path);
+    }
+}
+
+export async function uploadImage(media, user, event, aws) {
+    const compressedImage = await compressImageFile(media.uri);
+    if (compressedImage) {
+        const { compressedFileDetails, orignalFileDetails } = compressedImage;
+        const compressFile = compressedFileDetails;
+        if (compressFile) {
+            const fileName = getFileName(compressFile.path);
+            const cacheDirectoryPath = RNFS.CachesDirectoryPath;
+            const filePathForCompressedFile = `${cacheDirectoryPath}/${fileName}`;
+            const headers = {
+                "Authorization": user.firebaseAuthToken?.trim()
+            }
+            const requestBody = {
+                id: media.id,
+                md5: await getMD5(filePathForCompressedFile),
+                file_name: generateFileName(fileName, user.user.user_id, compressFile.creationTime),
+                name: compressFile.fileName,
+                event_id: event.event_id,
+                user_id: user.user.user_id,
+                mime_type: compressFile.type,
+                path: compressFile.path,
+                auto_collected: true,
+                file_date: `${convertUnixTimeSteamp(compressFile.creationTime)}`,
+                bucket: aws.bucket,
+                image: compressFile.base64,
+            };
+
+            Worker.addJob(Worker.UPLOAD_SERVER, { requestBody, headers, filePath: filePathForCompressedFile });
+            deleteFile(filePathForCompressedFile);
+        }
+        if (orignalFileDetails) {
+            const key = `events/${event.event_id}/originals/${media?.name}`;
+            Worker.addJob(Worker.UPLOAD_S3, { path: media.uri, key, id: media.id });
+        }
+    }
+}
