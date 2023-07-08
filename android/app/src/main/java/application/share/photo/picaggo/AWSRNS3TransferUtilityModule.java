@@ -1,10 +1,13 @@
 package application.share.photo.picaggo;
 
+import android.os.AsyncTask;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.amazonaws.AmazonClientException;
+import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.CognitoCachingCredentialsProvider;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferListener;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
@@ -13,6 +16,7 @@ import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3Client;
 
+import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
@@ -39,6 +43,7 @@ public class AWSRNS3TransferUtilityModule extends ReactContextBaseJavaModule {
     private String googleJWTToken;
 
     private TransferUtility transferUtility;
+    private AmazonS3Client s3Client;
     private static final ConcurrentHashMap<String, ConcurrentHashMap<String, Object>> requestMap = new ConcurrentHashMap<>();
 
     private static final String TAG = "AWSRNS3TransferUtility";
@@ -86,8 +91,8 @@ public class AWSRNS3TransferUtilityModule extends ReactContextBaseJavaModule {
             HashMap<String, String> logins = new HashMap<>();
             logins.put("securetoken.google.com/picaggo-235807", this.googleJWTToken);
             credentialsProvider.setLogins(logins);
-            AmazonS3Client client = new AmazonS3Client(credentialsProvider, Region.getRegion(Regions.fromName(this.region)));
-            this.transferUtility = TransferUtility.builder().s3Client(client).context(reactContext).build();
+            s3Client = new AmazonS3Client(credentialsProvider, Region.getRegion(Regions.fromName(this.region)));
+            this.transferUtility = TransferUtility.builder().s3Client(this.s3Client).context(reactContext).build();
             promise.resolve(true);
         } catch (Exception e){
             promise.reject(e);
@@ -175,6 +180,76 @@ public class AWSRNS3TransferUtilityModule extends ReactContextBaseJavaModule {
             promise.reject("FILE_NOT_FOUND", "File not found");
         }
     }
+
+
+    @ReactMethod
+    public void deleteFile(final ReadableMap options, Promise promise){
+        final String[] params = {BUCKET, KEY};
+        for (int i = 0; i < params.length; i++) {
+            if (!options.hasKey(params[i])) {
+                promise.reject("PARAMETER_ERROR", params[i] + " is not supplied", (Throwable) null);
+                return;
+            }
+        }
+        final String bucket = options.getString(BUCKET);
+        final String key = options.getString(KEY);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try{
+                    s3Client.deleteObject(bucket, key);
+                    promise.resolve(true);
+                }catch (AmazonServiceException e) {
+                    promise.reject("AMAZON_SERVICE_ERROR", e.getMessage(), e);
+                } catch (AmazonClientException e) {
+                    promise.reject("AMAZON_CLIENT_ERROR", e.getMessage(), e);
+                }
+            }
+        }).start();
+    }
+
+    @ReactMethod
+    public void checkFile(final ReadableMap options, Promise promise){
+        final String[] params = {BUCKET, KEY};
+        for (int i = 0; i < params.length; i++) {
+            if (!options.hasKey(params[i])) {
+                promise.reject("PARAMETER_ERROR", params[i] + " is not supplied", (Throwable) null);
+                return;
+            }
+        }
+        final String bucket = options.getString(BUCKET);
+        final String key = options.getString(KEY);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try{
+                    boolean fileExists = s3Client.doesObjectExist(bucket, key);
+                    if(fileExists){
+                        ObjectMetadata objectMetadata = s3Client.getObjectMetadata(bucket, key);
+                        WritableMap params = Arguments.createMap();
+                        params.putDouble("ContentLength", objectMetadata.getContentLength());
+                        params.putString("ContentType", objectMetadata.getContentType());
+                        params.putString("ETag", objectMetadata.getETag());
+                        params.putString("LastModified", objectMetadata.getLastModified().toString());
+                        params.putString("Metadata", objectMetadata.getRawMetadata().toString());
+                        params.putString("ReplicationStatus", objectMetadata.getReplicationStatus());
+                        params.putString("ServerSideEncryption", objectMetadata.getSSEAlgorithm());
+                        params.putString("VersionId", objectMetadata.getVersionId());
+                        params.putString("userdata", objectMetadata.getUserMetadata().toString());
+                        params.putBoolean("isFileExists", true);
+                        promise.resolve(params);
+                    } else {
+                        promise.resolve(fileExists);
+                    }
+                }catch (AmazonServiceException e) {
+                    promise.reject("AMAZON_SERVICE_ERROR", e.getMessage(), e);
+                } catch (AmazonClientException e) {
+                    promise.reject("AMAZON_CLIENT_ERROR", e.getMessage(), e);
+                }
+            }
+        }).start();
+    }
+
 
     private void sendEvent(ReactContext rnContext, String eventName, @Nullable WritableMap params){
         rnContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class).emit(eventName, params);

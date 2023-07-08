@@ -4,7 +4,7 @@ import { eventEmitter } from '../../event';
 import { DBInstance } from '../../service/realm';
 import reactotron from 'reactotron-react-native';
 import api from '../../api';
-import { getAWSClient } from '../../service/aws';
+import { checkFileExists, deleteFileFromS3, getAWSClient } from '../../service/aws';
 import { StorageService } from '../../service/storage_service';
 import RNFS from 'react-native-fs';
 import RNFetchBlob from 'rn-fetch-blob';
@@ -47,7 +47,7 @@ export const insertMedia = createAsyncThunk('media/insertMedia', (param = [], th
         });
 
         if (media.isImage && !media.isUploaded) {
-            await uploadImage(media, user, event, aws);
+            // await uploadImage(media, user, event, aws);
         } else if (!media.isImage && !media.isUploaded) {
             await uploadVideo(media, user, event, aws);
         }
@@ -67,7 +67,7 @@ export const loadMediaFromDataBase = createAsyncThunk('media/loadMedia', async (
     const dbMedia = DBInstance.objects('media');
     dbMedia.forEach(async (media) => {
         if (media.isImage && !media.isUploaded) {
-            await uploadImage(media, user, event, aws);
+            // await uploadImage(media, user, event, aws);
         } else if (!media.isImage && !media.isUploaded) {
             await uploadVideo(media, user, event, aws);
         }
@@ -78,6 +78,9 @@ export const loadMediaFromDataBase = createAsyncThunk('media/loadMedia', async (
 
 
 export async function uploadVideo(media, user, event, aws) {
+    const orignal_key = `events/${event.event_id}/originals/${media?.name}`;
+    checkFileExists(orignal_key);
+    return;
     const compressedVideoFile = await compressVideoFile(media.uri);
     const thumbnail = await getVideoThumbnail(media.uri);
     if (Boolean(thumbnail && compressedVideoFile)) {

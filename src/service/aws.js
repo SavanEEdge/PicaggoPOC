@@ -3,6 +3,7 @@ import AWS from 'aws-sdk';
 import { NativeModules } from 'react-native';
 import { deleteFile } from '../utils/helper';
 import { DBInstance } from './realm';
+import { AWSS3TransferUtility } from './aws_transfer_service';
 
 export const getAWSClient = (() => {
     let client;
@@ -42,9 +43,17 @@ export async function checkFileExists(Key) {
     };
 
     try {
-        const res = await client?.headObject(params).promise();
+        const awsDetails = StorageService.getValue("aws");
+        const firebaseToken = StorageService.getValue("FToken");
+        const region = awsDetails?.region_name;
+        const poll_id = awsDetails?.pool_id;
+        const bucket = awsDetails?.bucket;
+        const google_jwt_token = firebaseToken;
+        const s3Client = new AWSS3TransferUtility();
+        await s3Client.initWithOptions({ region, poll_id, google_jwt_token });
+        const res = await s3Client.checkFile({ bucket, key: Key });
         console.log('File exists ', res);
-        return { isFileExists: true, data: res };
+        return res;
     } catch (error) {
         if (error.code === 'NotFound') {
             console.log('File does not exist');
@@ -57,16 +66,17 @@ export async function checkFileExists(Key) {
 };
 
 export async function deleteFileFromS3(Key) {
-    const client = getAWSClient();
-    const awsDetails = StorageService.getValue("aws");
-    const params = {
-        Bucket: awsDetails?.bucket,
-        Key,
-    };
-
     try {
-        const res = await client.deleteObject(params).promise();
-        console.log('File deleted successfully ', res);
+        const awsDetails = StorageService.getValue("aws");
+        const firebaseToken = StorageService.getValue("FToken");
+        const region = awsDetails?.region_name;
+        const poll_id = awsDetails?.pool_id;
+        const bucket = awsDetails?.bucket;
+        const google_jwt_token = firebaseToken;
+        const s3Client = new AWSS3TransferUtility();
+        await s3Client.initWithOptions({ region, poll_id, google_jwt_token });
+        await s3Client.deleteFile({ bucket, key: Key });
+        console.log('File deleted successfully ');
     } catch (error) {
         console.error('Error deleting file:', error);
     }

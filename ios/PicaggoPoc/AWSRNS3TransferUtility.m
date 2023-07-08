@@ -11,5 +11,9 @@
 
 RCT_EXPORT_MODULE(AWSRNS3TransferUtility);
 
+RCT_EXPORT_METHOD(initWithOptions:(NSDictionary* )options){
+   
+}
+
 @end
 	
