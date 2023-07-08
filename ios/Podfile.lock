@@ -5,6 +5,15 @@ PODS:
   - AppAuth/Core (1.6.2)
   - AppAuth/ExternalUserAgent (1.6.2):
     - AppAuth/Core
+  - AWSCognito (2.19.1):
+    - AWSCore (= 2.19.1)
+  - AWSCognitoIdentityProvider (2.19.1):
+    - AWSCognitoIdentityProviderASF (= 2.19.1)
+    - AWSCore (= 2.19.1)
+  - AWSCognitoIdentityProviderASF (2.19.1)
+  - AWSCore (2.19.1)
+  - AWSS3 (2.19.1):
+    - AWSCore (= 2.19.1)
   - boost (1.76.0)
   - CocoaAsyncSocket (7.6.5)
   - DoubleConversion (1.1.6)
@@ -510,6 +519,10 @@ PODS:
     - Yoga (~> 1.14)
 
 DEPENDENCIES:
+  - AWSCognito
+  - AWSCognitoIdentityProvider
+  - AWSCore
+  - AWSS3
   - boost (from `../node_modules/react-native/third-party-podspecs/boost.podspec`)
   - DoubleConversion (from `../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec`)
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
@@ -587,6 +600,11 @@ DEPENDENCIES:
 SPEC REPOS:
   trunk:
     - AppAuth
+    - AWSCognito
+    - AWSCognitoIdentityProvider
+    - AWSCognitoIdentityProviderASF
+    - AWSCore
+    - AWSS3
     - CocoaAsyncSocket
     - Firebase
     - FirebaseAppCheckInterop
@@ -716,6 +734,11 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   AppAuth: 3bb1d1cd9340bd09f5ed189fb00b1cc28e1e8570
+  AWSCognito: f50de600804941d083af37a7568905f31a774727
+  AWSCognitoIdentityProvider: e6932c709d3e0b234128aeb5f2052c9bf1032d8d
+  AWSCognitoIdentityProviderASF: 749f58b75e69f7f0144b9d38539525562b843d34
+  AWSCore: 55c154ae27efc5c98bdc30a0eeea5a35d10a2ab5
+  AWSS3: 2272253b098d07803af8dd20ce6ce7302bcffb47
   boost: 57d2868c099736d80fcd648bf211b4431e51a558
   CocoaAsyncSocket: 065fd1e645c7abab64f7a6a2007a48038fdc6a99
   DoubleConversion: 5189b271737e1565bdce30deb4a08d647e3f5f54
@@ -793,6 +816,6 @@ SPEC CHECKSUMS:
   Yoga: e7ea9e590e27460d28911403b894722354d73479
   YogaKit: f782866e155069a2cca2517aafea43200b01fd5a
 
-PODFILE CHECKSUM: 81280be74a1955ce2dbf6a7c40f55411a774a2f0
+PODFILE CHECKSUM: 310b000e4987418f9399efd775d54859678d953a
 
 COCOAPODS: 1.12.1
