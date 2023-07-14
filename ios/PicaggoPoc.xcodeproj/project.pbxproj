@@ -14,8 +14,8 @@
 		13B07FC11A68108700A75B9A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
 		7699B88040F8A987B510C191 /* libPods-PicaggoPoc-PicaggoPocTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 19F6CBCC0A4E27FBF8BF4A61 /* libPods-PicaggoPoc-PicaggoPocTests.a */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
-		D37BDCE92A5919B80013B31E /* AWSRNS3TransferUtility.m in Sources */ = {isa = PBXBuildFile; fileRef = D37BDCE82A5919B80013B31E /* AWSRNS3TransferUtility.m */; };
-		D37BDCEA2A5919B80013B31E /* AWSRNS3TransferUtility.m in Sources */ = {isa = PBXBuildFile; fileRef = D37BDCE82A5919B80013B31E /* AWSRNS3TransferUtility.m */; };
+		D37BDCEE2A5920920013B31E /* AWSRNS3TransferUtilityModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = D37BDCED2A5920920013B31E /* AWSRNS3TransferUtilityModule.swift */; };
+		D37BDCEF2A5920920013B31E /* AWSRNS3TransferUtilityModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = D37BDCED2A5920920013B31E /* AWSRNS3TransferUtilityModule.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -45,8 +45,9 @@
 		5DCACB8F33CDC322A6C60F78 /* libPods-PicaggoPoc.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-PicaggoPoc.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = PicaggoPoc/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		89C6BE57DB24E9ADA2F236DE /* Pods-PicaggoPoc-PicaggoPocTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-PicaggoPoc-PicaggoPocTests.release.xcconfig"; path = "Target Support Files/Pods-PicaggoPoc-PicaggoPocTests/Pods-PicaggoPoc-PicaggoPocTests.release.xcconfig"; sourceTree = "<group>"; };
-		D37BDCE72A5919900013B31E /* AWSRNS3TransferUtility.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = AWSRNS3TransferUtility.h; path = PicaggoPoc/AWSRNS3TransferUtility.h; sourceTree = "<group>"; };
-		D37BDCE82A5919B80013B31E /* AWSRNS3TransferUtility.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = AWSRNS3TransferUtility.m; path = PicaggoPoc/AWSRNS3TransferUtility.m; sourceTree = "<group>"; };
+		D37BDCEB2A5920920013B31E /* PicaggoPoc-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "PicaggoPoc-Bridging-Header.h"; sourceTree = "<group>"; };
+		D37BDCEC2A5920920013B31E /* PicaggoPocTests-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "PicaggoPocTests-Bridging-Header.h"; sourceTree = "<group>"; };
+		D37BDCED2A5920920013B31E /* AWSRNS3TransferUtilityModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AWSRNS3TransferUtilityModule.swift; path = PicaggoPoc/AWSRNS3TransferUtilityModule.swift; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
@@ -96,8 +97,9 @@
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */,
 				13B07FB71A68108700A75B9A /* main.m */,
-				D37BDCE72A5919900013B31E /* AWSRNS3TransferUtility.h */,
-				D37BDCE82A5919B80013B31E /* AWSRNS3TransferUtility.m */,
+				D37BDCED2A5920920013B31E /* AWSRNS3TransferUtilityModule.swift */,
+				D37BDCEB2A5920920013B31E /* PicaggoPoc-Bridging-Header.h */,
+				D37BDCEC2A5920920013B31E /* PicaggoPocTests-Bridging-Header.h */,
 			);
 			name = PicaggoPoc;
 			sourceTree = "<group>";
@@ -211,10 +213,11 @@
 				TargetAttributes = {
 					00E356ED1AD99517003FC87E = {
 						CreatedOnToolsVersion = 6.2;
+						LastSwiftMigration = 1420;
 						TestTargetID = 13B07F861A680F5B00A75B9A;
 					};
 					13B07F861A680F5B00A75B9A = {
-						LastSwiftMigration = 1120;
+						LastSwiftMigration = 1420;
 					};
 				};
 			};
@@ -425,7 +428,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				00E356F31AD99517003FC87E /* PicaggoPocTests.m in Sources */,
-				D37BDCEA2A5919B80013B31E /* AWSRNS3TransferUtility.m in Sources */,
+				D37BDCEF2A5920920013B31E /* AWSRNS3TransferUtilityModule.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -433,8 +436,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D37BDCEE2A5920920013B31E /* AWSRNS3TransferUtilityModule.swift in Sources */,
 				13B07FBC1A68108700A75B9A /* AppDelegate.mm in Sources */,
-				D37BDCE92A5919B80013B31E /* AWSRNS3TransferUtility.m in Sources */,
 				13B07FC11A68108700A75B9A /* main.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -454,7 +457,9 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 5B7EB9410499542E8C5724F5 /* Pods-PicaggoPoc-PicaggoPocTests.debug.xcconfig */;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_ENABLE_MODULES = YES;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
 					"$(inherited)",
@@ -473,6 +478,9 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "PicaggoPocTests-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/PicaggoPoc.app/PicaggoPoc";
 			};
 			name = Debug;
@@ -481,7 +489,9 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 89C6BE57DB24E9ADA2F236DE /* Pods-PicaggoPoc-PicaggoPocTests.release.xcconfig */;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_ENABLE_MODULES = YES;
 				COPY_PHASE_STRIP = NO;
 				INFOPLIST_FILE = PicaggoPocTests/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 12.4;
@@ -497,6 +507,8 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "PicaggoPocTests-Bridging-Header.h";
+				SWIFT_VERSION = 5.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/PicaggoPoc.app/PicaggoPoc";
 			};
 			name = Release;
@@ -522,6 +534,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = PicaggoPoc;
+				SWIFT_OBJC_BRIDGING_HEADER = "PicaggoPoc-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -548,6 +561,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = PicaggoPoc;
+				SWIFT_OBJC_BRIDGING_HEADER = "PicaggoPoc-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
 			};
