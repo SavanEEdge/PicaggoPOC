@@ -49,6 +49,10 @@ target 'PicaggoPoc' do
     # Pods for testing
   end
 
+  pod 'AWSCore' 
+  pod 'AWSS3'
+  pod 'AWSCognito'
+  pod 'AWSCognitoIdentityProvider'
   post_install do |installer|
     react_native_post_install(
       installer,

@@ -119,6 +119,7 @@ function NavigationStack() {
             const response = await api.post("https://u6mj6kk2h1.execute-api.us-west-1.amazonaws.com/findRegion", requestBody, headers);
             if (response.status) {
                 const data = parseJson(response.data);
+                console.log("AWS ", JSON.stringify(data, null, 2));
                 StorageService.setValue("aws", data);
                 addS3Details(data);
             }
