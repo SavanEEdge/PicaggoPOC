@@ -7,6 +7,7 @@ import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.os.Build.VERSION;
 import android.text.TextUtils;
+import android.util.Log;
 import android.webkit.URLUtil;
 
 import com.facebook.react.bridge.Arguments;
@@ -71,6 +72,7 @@ public class CreateThumbnailModule extends ReactContextBaseJavaModule {
 
             String thumbnailDir = weakContext.get().getApplicationContext().getCacheDir().getAbsolutePath() + "/thumbnails";
             File cacheDir = createDirIfNotExists(thumbnailDir);
+
             if (!TextUtils.isEmpty(cacheName)) {
                 File file = new File(thumbnailDir, cacheName + "." + format);
                 if (file.exists()) {
@@ -81,6 +83,7 @@ public class CreateThumbnailModule extends ReactContextBaseJavaModule {
                     map.putString("mime", "image/" + format);
                     map.putDouble("width", image.getWidth());
                     map.putDouble("height", image.getHeight());
+                    Log.e("DEMOOOOOOOOOO", map.toString());
                     return map;
                 }
             }

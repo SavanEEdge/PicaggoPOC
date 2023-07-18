@@ -1,5 +1,6 @@
 import { create, } from 'apisauce';
 import { encodedData } from '../utils/helper';
+import reactotron from 'reactotron-react-native';
 
 class Api {
     constructor() {
@@ -14,7 +15,7 @@ class Api {
 
     // Common response handler
     handleResponse = response => {
-        // console.log("Respnse", JSON.stringify(response, null, 2));
+        // reactotron.log("Respnse", JSON.stringify(response, null, 2));
         if (response.ok) {
             return { status: true, data: response.data };
         } else {
