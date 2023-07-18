@@ -363,12 +363,14 @@ export async function getVideoThumbnail(uri) {
       url: uri,
       timeStamp: 1000,
       format: 'jpeg',
-      cacheName: `${uri?.split("/").pop()}_thumb`
+      cacheName: `${uri?.split('/').pop()}_thumb`,
     });
+
     return {
-      // {"mime":"image/jpeg","size":3686400,"height":720,"width":1280,"path":"file:///data/user/0/application.share.photo.picaggo/cache/thumbnails/temp.jpeg"} 
       ...thumbnail_response,
-      path: `${RNFS.CachesDirectoryPath}/thumbnails`
+      path: `${RNFS.CachesDirectoryPath}/thumbnails/${thumbnail_response?.path
+        ?.split('/')
+        .pop()}`,
     };
   }
 }

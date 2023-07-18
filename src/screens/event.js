@@ -84,7 +84,7 @@ function Event() {
             return (
               <View key={media.uri} style={{marginVertical: 10}}>
                 <Image
-                  source={{uri: media.thumbnail.path}}
+                  source={{uri: `file://${media.thumbnail.path}`}}
                   style={{width: '100%', height: 250}}
                 />
                 {!media.isUploaded && (
