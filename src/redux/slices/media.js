@@ -100,7 +100,7 @@ export const loadMediaFromDataBase = createAsyncThunk(
     callback?.();
     dbMedia.forEach(async media => {
       if (media.isImage) {
-        // await uploadImage(media, user, event, aws);
+        await uploadImage(media, user, event, aws);
       } else if (!media.isImage) {
         await uploadVideo(media, user, event, aws);
       }
@@ -139,7 +139,7 @@ export async function uploadVideo(media, user, event, aws) {
       bucket: aws.bucket,
       image: await getBase64(thumbnail.path),
     };
-    
+
     Worker.addJob(Worker.UPLOAD_SERVER, {
       requestBody,
       headers,
