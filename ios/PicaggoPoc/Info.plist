@@ -51,5 +51,64 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.896982317636-8scpn8780ar25sb60gqucrrkqjlf9nev</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+			<key>CFBundleURLName</key>
+			<string>application.photos.event.picaggo</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>picaggoevent</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+			<key>CFBundleURLName</key>
+			<string>application.photos.web.picaggo</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>picaggoweb</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+			<key>CFBundleURLName</key>
+			<string>application.photo.invite.picaggo</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>picaggoinvite</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>Bundle ID</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>application.photos.share.picaggo</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.896982317636-f9hcri0mi2sea7k6h47uduu4oph57mjt</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

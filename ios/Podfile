@@ -39,20 +39,16 @@ target 'PicaggoPoc' do
     #
     # Note that if you have use_frameworks! enabled, Flipper will not work and
     # you should disable the next line.
-    :flipper_configuration => flipper_config,
+    # :flipper_configuration => flipper_config,
     # An absolute path to your application root.
     :app_path => "#{Pod::Config.instance.installation_root}/.."
   )
-
-  target 'PicaggoPocTests' do
-    inherit! :complete
-    # Pods for testing
-  end
 
   pod 'AWSCore' 
   pod 'AWSS3'
   pod 'AWSCognito'
   pod 'AWSCognitoIdentityProvider'
+  pod 'glog', :podspec => '../node_modules/react-native/third-party-podspecs/glog.podspec', :modular_headers => false
   post_install do |installer|
     react_native_post_install(
       installer,
@@ -62,10 +58,5 @@ target 'PicaggoPoc' do
     )
     __apply_Xcode_12_5_M1_post_install_workaround(installer)
   end
-
-  pod 'AWSCore'
-  pod 'AWSCognito'
-  pod 'AWSS3'
-  pod 'AWSCognitoIdentityProvider'
   
 end
