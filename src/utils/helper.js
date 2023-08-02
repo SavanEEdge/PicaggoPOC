@@ -13,9 +13,15 @@ import {createThumbnail} from '../third_party/react-native-create-thumbnail';
 import reactotron from 'reactotron-react-native';
 
 export function generateFileName(name, user_id, date) {
-  if (!name) return '';
-  if (!user_id) return '';
-  if (!date) return '';
+  if (!name) {
+    return '';
+  }
+  if (!user_id) {
+    return '';
+  }
+  if (!date) {
+    return '';
+  }
 
   return (
     getHash(user_id + date + name) +
@@ -81,68 +87,147 @@ export function mergedArr(mainArray, fetchedArray) {
   return [...mainArray, ...uniqueArr2Objs];
 }
 
-export async function requestPermission() {
-  if (Platform.OS === 'android') {
-    try {
-      let permissions = [];
-      const isReleseCode13 = Platform.constants['Release'] >= 13;
-      if (isReleseCode13) {
-        permissions = [
-          PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES,
-          PermissionsAndroid.PERMISSIONS.READ_MEDIA_VIDEO,
-        ];
-      } else {
-        permissions = [
-          PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-          PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-        ];
-      }
+// export async function requestPermission() {
+//   if (Platform.OS === 'android') {
+//     try {
+//       let permissions = [];
+//       const isAndroid33OrAbove = Platform.Version >= 33;
+//       if (isAndroid33OrAbove) {
+//         permissions = [
+//           PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES,
+//           PermissionsAndroid.PERMISSIONS.READ_MEDIA_VIDEO,
+//         ];
+//       } else {
+//         permissions = [PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE];
+//         if (Platform.Version < 23) {
+//           permissions.push(
+//             PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+//           );
+//         }
+//       }
 
-      const result = await PermissionsAndroid.requestMultiple(permissions);
-      if (isReleseCode13) {
-        if (
-          result['android.permission.READ_MEDIA_IMAGES'] === 'granted' &&
-          result['android.permission.READ_MEDIA_VIDEO'] === 'granted'
-        ) {
-          return true;
-        } else if (
-          result['android.permission.READ_MEDIA_IMAGES'] ===
-            'never_ask_again' ||
-          result['android.permission.READ_MEDIA_VIDEO'] === 'never_ask_again'
-        ) {
-          ToastAndroid.show(
-            'Please Allow permissions to continue',
-            ToastAndroid.LONG,
-          );
-          Linking.openSettings();
-        }
-      } else {
-        if (
-          result['android.permission.READ_EXTERNAL_STORAGE'] === 'granted' &&
-          result['android.permission.WRITE_EXTERNAL_STORAGE'] === 'granted'
-        ) {
-          return true;
-        } else if (
-          result['android.permission.READ_EXTERNAL_STORAGE'] ===
-            'never_ask_again' ||
-          result['android.permission.WRITE_EXTERNAL_STORAGE'] ===
-            'never_ask_again'
-        ) {
-          ToastAndroid.show(
-            'Please Allow permissions to continue',
-            ToastAndroid.LONG,
-          );
-          Linking.openSettings();
-        }
-      }
-      return false;
-    } catch (error) {
-      console.error('Permission request error:', error);
-      return false;
-    }
+//       const result = await PermissionsAndroid.requestMultiple(permissions);
+//       if (isAndroid33OrAbove) {
+//         if (
+//           result['android.permission.READ_MEDIA_IMAGES'] ===
+//             PermissionsAndroid.RESULTS.GRANTED &&
+//           result['android.permission.READ_MEDIA_VIDEO'] ===
+//             PermissionsAndroid.RESULTS.GRANTED
+//         ) {
+//           return true;
+//         } else if (
+//           result['android.permission.READ_MEDIA_IMAGES'] ===
+//             PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN ||
+//           result['android.permission.READ_MEDIA_VIDEO'] ===
+//             PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN
+//         ) {
+//           ToastAndroid.show(
+//             'Please Allow permissions to continue',
+//             ToastAndroid.LONG,
+//           );
+//           Linking.openSettings();
+//         }
+//       } else {
+//         if (
+//           result['android.permission.READ_EXTERNAL_STORAGE'] ===
+//             PermissionsAndroid.RESULTS.GRANTED &&
+//           (Platform.Version < 23 ||
+//             result['android.permission.WRITE_EXTERNAL_STORAGE'] ===
+//               PermissionsAndroid.RESULTS.GRANTED)
+//         ) {
+//           return true;
+//         } else if (
+//           result['android.permission.READ_EXTERNAL_STORAGE'] ===
+//           PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN
+//         ) {
+//           ToastAndroid.show(
+//             'Please Allow permissions to continue',
+//             ToastAndroid.LONG,
+//           );
+//           Linking.openSettings();
+//         }
+//       }
+//       return false;
+//     } catch (error) {
+//       console.error('Permission request error:', error);
+//       return false;
+//     }
+//   }
+
+//   return true;
+// }
+
+export async function requestPermission() {
+  if (Platform.OS !== 'android') {
+    return true;
   }
 
-  return true;
+  try {
+    let permissions = [];
+    const isAndroid33OrAbove = Platform.Version >= 33;
+
+    if (isAndroid33OrAbove) {
+      permissions = [
+        PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES,
+        PermissionsAndroid.PERMISSIONS.READ_MEDIA_VIDEO,
+      ];
+    } else {
+      permissions = [
+        PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
+        ...(Platform.Version < 23
+          ? [PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE]
+          : []),
+      ];
+    }
+
+    const result = await PermissionsAndroid.requestMultiple(permissions);
+
+    if (isAndroid33OrAbove) {
+      if (
+        result['android.permission.READ_MEDIA_IMAGES'] ===
+          PermissionsAndroid.RESULTS.GRANTED &&
+        result['android.permission.READ_MEDIA_VIDEO'] ===
+          PermissionsAndroid.RESULTS.GRANTED
+      ) {
+        return true;
+      } else if (
+        result['android.permission.READ_MEDIA_IMAGES'] ===
+          PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN ||
+        result['android.permission.READ_MEDIA_VIDEO'] ===
+          PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN
+      ) {
+        ToastAndroid.show(
+          'Please Allow permissions to continue',
+          ToastAndroid.LONG,
+        );
+        Linking.openSettings();
+      }
+    } else {
+      if (
+        result['android.permission.READ_EXTERNAL_STORAGE'] ===
+          PermissionsAndroid.RESULTS.GRANTED &&
+        (Platform.Version < 23 ||
+          result['android.permission.WRITE_EXTERNAL_STORAGE'] ===
+            PermissionsAndroid.RESULTS.GRANTED)
+      ) {
+        return true;
+      } else if (
+        result['android.permission.READ_EXTERNAL_STORAGE'] ===
+        PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN
+      ) {
+        ToastAndroid.show(
+          'Please Allow permissions to continue',
+          ToastAndroid.LONG,
+        );
+        Linking.openSettings();
+      }
+    }
+
+    return false;
+  } catch (error) {
+    console.error('Permission request error:', error);
+    return false;
+  }
 }
 
 function isImageFile(filename) {
