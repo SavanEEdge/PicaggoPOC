@@ -22,6 +22,7 @@ import {StorageService} from './service/storage_service';
 import {watchMedia} from './service/realm';
 import {useDispatch} from 'react-redux';
 import {Worker} from './service/queue';
+import {CheckPermission} from './utils/check_permission';
 
 GoogleSignin.configure({
   webClientId:
@@ -34,6 +35,10 @@ function NavigationStack() {
   const {user, updateInfo, userLogout} = useUser();
   const {showLoader, hideLoader} = useLoader();
   const {addS3Details} = useAWS();
+
+  useEffect(() => {
+    CheckPermission.verifySaveFilePermission();
+  }, []);
 
   const dispatch = useDispatch();
   useEffect(() => {

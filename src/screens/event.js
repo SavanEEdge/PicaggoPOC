@@ -1,4 +1,6 @@
-import {useEffect} from 'react';
+/* eslint-disable no-shadow */
+/* eslint-disable react-native/no-inline-styles */
+import React, {useCallback, useEffect} from 'react';
 import {Image, ScrollView, StyleSheet, Text, View} from 'react-native';
 import {useEvent} from '../hooks/useEvent';
 import {getAssetsByEventTime, requestPermission} from '../utils/helper';
@@ -14,11 +16,24 @@ function Event() {
   const {media, addAssets} = useMedia();
   const dispatch = useDispatch();
 
+  const init = useCallback(async () => {
+    const isPermission = await requestPermission();
+    if (event) {
+      if (isPermission) {
+        const result = await getAssetsByEventTime(
+          event?.start_time,
+          event?.end_time,
+        );
+        addAssets(result);
+      }
+    }
+  }, [addAssets, event]);
+
   useInactiveBackgroundState(init);
 
   useEffect(() => {
     dispatch(loadMediaFromDataBase(init));
-  }, []);
+  }, [dispatch, init]);
 
   useEffect(() => {
     eventEmitter.addListener('media', data => {
@@ -29,20 +44,7 @@ function Event() {
     return () => {
       eventEmitter.removeListener('media');
     };
-  }, []);
-
-  async function init() {
-    const isPermission = await requestPermission();
-    if (!!event) {
-      if (isPermission) {
-        const result = await getAssetsByEventTime(
-          event?.start_time,
-          event?.end_time,
-        );
-        addAssets(result);
-      }
-    }
-  }
+  }, [dispatch]);
 
   return (
     <View style={styles.container}>
@@ -103,7 +105,6 @@ function Event() {
               </View>
             );
           }
-          return null;
         })}
       </ScrollView>
     </View>

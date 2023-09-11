@@ -12,6 +12,8 @@ import {Linking} from 'react-native';
 import {createThumbnail} from '../third_party/react-native-create-thumbnail';
 import reactotron from 'reactotron-react-native';
 
+export const isAndroid = Platform.OS === 'android';
+
 export function generateFileName(name, user_id, date) {
   if (!name) {
     return '';
