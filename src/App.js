@@ -38,6 +38,7 @@ function NavigationStack() {
 
   useEffect(() => {
     CheckPermission.verifySaveFilePermission();
+    CheckPermission.verifyReadGalleryPermission();
   }, []);
 
   const dispatch = useDispatch();
