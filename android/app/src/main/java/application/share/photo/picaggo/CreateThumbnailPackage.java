@@ -1,4 +1,4 @@
-package application.share.photo.picaggo;
+package application.share.photo.picaggo.poc;
 
 import java.util.Arrays;
 import java.util.Collections;

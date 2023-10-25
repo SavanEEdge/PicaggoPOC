@@ -1,4 +1,4 @@
-package application.share.photo.picaggo;
+package application.share.photo.picaggo.poc;
 
 import android.os.AsyncTask;
 import android.util.Log;

@@ -94,9 +94,9 @@ android {
 
     compileSdkVersion rootProject.ext.compileSdkVersion
 
-    namespace "application.share.photo.picaggo"
+    namespace "application.share.photo.picaggo.poc"
     defaultConfig {
-        applicationId "application.share.photo.picaggo"
+        applicationId "application.share.photo.picaggo.poc"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 2

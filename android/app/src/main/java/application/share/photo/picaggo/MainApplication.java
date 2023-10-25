@@ -1,4 +1,4 @@
-package application.share.photo.picaggo;
+package application.share.photo.picaggo.poc;
 
 import android.app.Application;
 import com.facebook.react.PackageList;

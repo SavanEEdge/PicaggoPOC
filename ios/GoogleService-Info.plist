@@ -3,23 +3,23 @@
 <plist version="1.0">
 <dict>
 	<key>CLIENT_ID</key>
-	<string>896982317636-8scpn8780ar25sb60gqucrrkqjlf9nev.apps.googleusercontent.com</string>
+	<string>443406986671-ahghggphrf14uilcf9cl426fogrf53a8.apps.googleusercontent.com</string>
 	<key>REVERSED_CLIENT_ID</key>
-	<string>com.googleusercontent.apps.896982317636-8scpn8780ar25sb60gqucrrkqjlf9nev</string>
+	<string>com.googleusercontent.apps.443406986671-ahghggphrf14uilcf9cl426fogrf53a8</string>
 	<key>ANDROID_CLIENT_ID</key>
-	<string>896982317636-5ul5sc8rvichrcjubdk96k9l8vpn7tln.apps.googleusercontent.com</string>
+	<string>443406986671-h17mukeqham1tj1abjod8hm3d9p4in7j.apps.googleusercontent.com</string>
 	<key>API_KEY</key>
-	<string>AIzaSyCoBDfYV9YEGOZ5Jvk4Mm8okd04LGtgmV8</string>
+	<string>AIzaSyD36TC4R7FNfZRkVEn3GSoDGKIu1HO6MTY</string>
 	<key>GCM_SENDER_ID</key>
-	<string>896982317636</string>
+	<string>443406986671</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>application.photos.share.picaggo</string>
+	<string>application.share.photo.picaggo.poc</string>
 	<key>PROJECT_ID</key>
-	<string>picaggo-235807</string>
+	<string>picaggo-stage</string>
 	<key>STORAGE_BUCKET</key>
-	<string>picaggo-235807.appspot.com</string>
+	<string>picaggo-stage.appspot.com</string>
 	<key>IS_ADS_ENABLED</key>
 	<false></false>
 	<key>IS_ANALYTICS_ENABLED</key>
@@ -31,8 +31,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:896982317636:ios:ec360353b3c7af00c51a11</string>
-	<key>DATABASE_URL</key>
-	<string>https://picaggo-235807.firebaseio.com</string>
+	<string>1:443406986671:ios:dcb14721fa0c044ff5d35a</string>
 </dict>
 </plist>
