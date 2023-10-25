@@ -17,15 +17,12 @@ function Event() {
   const dispatch = useDispatch();
 
   const init = useCallback(async () => {
-    const isPermission = await requestPermission();
     if (event) {
-      if (isPermission) {
-        const result = await getAssetsByEventTime(
-          event?.start_time,
-          event?.end_time,
-        );
-        addAssets(result);
-      }
+      const result = await getAssetsByEventTime(
+        event?.start_time,
+        event?.end_time,
+      );
+      addAssets(result);
     }
   }, [addAssets, event]);
 
@@ -61,7 +58,7 @@ function Event() {
         {media.assets.map(media => {
           if (media.isImage) {
             return (
-              <View key={media.uri} style={{marginVertical: 10}}>
+              <View key={media.id} style={{marginVertical: 10}}>
                 <Image
                   source={{uri: media.uri}}
                   style={{width: '100%', height: 250}}

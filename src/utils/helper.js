@@ -43,15 +43,10 @@ function getHash(message) {
 
 export async function getMD5(filePath) {
   try {
-    const isPermission = await requestPermission();
-    if (isPermission) {
-      // const path = `${RNFS.ExternalStorageDirectoryPath}/dcim/camera/${filename}`;
-      const hash = await RNFetchBlob.fs.hash(filePath, 'md5');
+    const hash = await RNFetchBlob.fs.hash(filePath, 'md5');
 
-      console.log('MD5 Hash', hash);
-      return hash;
-    }
-    return '';
+    console.log('MD5 Hash', hash);
+    return hash;
   } catch (error) {
     // Handle any errors
     console.error('Generating file error: ', error);

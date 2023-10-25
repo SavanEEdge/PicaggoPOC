@@ -1,15 +1,17 @@
-import {useMemo} from 'react';
+import {useCallback} from 'react';
 import {useSelector, useDispatch} from 'react-redux';
 import {insertMedia} from '../redux/slices/media';
-import {useEffect} from 'react';
 
 export function useMedia() {
   const dispatch = useDispatch();
   const mediaData = useSelector(state => state.media);
 
-  function addAssets(mediaArray) {
-    dispatch(insertMedia(mediaArray));
-  }
+  const addAssets = useCallback(
+    mediaArray => {
+      dispatch(insertMedia(mediaArray));
+    },
+    [dispatch],
+  );
 
   return {
     media: mediaData,

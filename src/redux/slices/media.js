@@ -75,7 +75,9 @@ export const loadMediaFromDataBase = createAsyncThunk(
     const aws = StorageService.getValue('aws');
 
     const dbMedia = DBInstance.objects('media');
-
+    if (dbMedia.length <= 0) {
+      return;
+    }
     const data = dbMedia.map(async e => {
       const obj = {
         id: e.id,
@@ -112,7 +114,7 @@ export async function uploadVideo(media, user, event, aws) {
   const compressedVideoFile = await compressVideoFile(media.uri);
   const thumbnail = await getVideoThumbnail(media.uri);
 
-  if (Boolean(thumbnail && compressedVideoFile)) {
+  if (thumbnail && compressedVideoFile) {
     const {compressedFileDetails, orignalFileDetails} = compressedVideoFile;
     const fileName = getFileName(compressedFileDetails.path);
     const cacheDirectoryPath = RNFS.CachesDirectoryPath;
@@ -201,7 +203,23 @@ export async function uploadImage(media, user, event, aws) {
         bucket: aws.bucket,
         image: compressFile.base64,
       };
-
+      console.log('requestBody ', {
+        id: media.id,
+        md5: await getMD5(filePathForCompressedFile),
+        file_name: generateFileName(
+          fileName,
+          user.user.user_id,
+          compressFile.creationTime,
+        ),
+        name: fileName,
+        event_id: event.event_id,
+        user_id: user.user.user_id,
+        mime_type: compressFile.type,
+        path: compressFile.path,
+        auto_collected: true,
+        file_date: `${convertUnixTimeSteamp(compressFile.creationTime)}`,
+        bucket: aws.bucket,
+      });
       Worker.addJob(Worker.UPLOAD_SERVER, {
         requestBody,
         headers,

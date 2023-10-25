@@ -11,7 +11,7 @@ buildscript {
         ndkVersion = "23.1.7779620"
 
         // Keystore Path
-        var = 'PICAGGO_KEY'
+        var = 'PICAGGO_POC_KEY'
     }
     ext.kotlin_version = '1.7.1'
     repositories {
